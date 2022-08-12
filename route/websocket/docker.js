@@ -11,7 +11,6 @@ MCSERVER.PAGE.DockerRes = [];
 
 //Docker 容器创建路由
 WebSocketObserver().listener("docker/new", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
   let dockerConfig = JSON.parse(data.body);
   //{dockerImageName: "",
   //dockerfile: "FROM java:latest↵RUN mkdir -p /mcsd↵RUN echo "Asia…teractive tzdata↵WORKDIR / mcsd↵RUN apt - get update"}
@@ -70,13 +69,11 @@ WebSocketObserver().listener("docker/new", (data) => {
 //结果列表获取
 //路由
 WebSocketObserver().listener("docker/res", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
   response.wsSend(data.ws, "docker/res", MCSERVER.PAGE.DockerRes);
 });
 
 //获取配置
 WebSocketObserver().listener("docker/config", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
   let serverName = data.body || "";
   if (serverName) {
     let mcserver = serverModel.ServerManager().getServer(serverName);
@@ -87,7 +84,6 @@ WebSocketObserver().listener("docker/config", (data) => {
 
 //设置配置
 WebSocketObserver().listener("docker/setconfig", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
   // {
   //     serverName: "xxxx",
   //     dockerConfig: { ... }

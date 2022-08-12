@@ -10,8 +10,6 @@ WebSocketObserver().listener("server/console/command", (data) => {
   let par = JSON.parse(data.body);
   let serverName = par.serverName.trim();
   let command = par.command;
-  let userName = data.WsSession.username;
-  if (permssion.isCanServer(userName, serverName)) {
     //代表重启服务器
     if (command == "__restart__") {
       serverModel.ServerManager().getServer(serverName).restart();
@@ -38,8 +36,6 @@ WebSocketObserver().listener("server/console/command", (data) => {
     //不是特殊命令，则直接执行
     serverModel.sendCommand(serverName, command);
     return;
-  }
-  response.wsSend(data.ws, "server/console/command", null);
 });
 
 //服务端退出之后第一事件

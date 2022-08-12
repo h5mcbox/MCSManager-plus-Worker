@@ -1,10 +1,9 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
 const serverModel = require("../../model/ServerModel");
 const response = require("../../helper/Response");
-const permssion = require("../../helper/Permission");
+const mcPingProtocol = require("../../helper/MCPingProtocol");
 
 WebSocketObserver().listener("server/view", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
   let value = serverModel.ServerManager().getServerList();
   response.wsSend(data.ws, "server/view", {
     items: value
@@ -13,8 +12,6 @@ WebSocketObserver().listener("server/view", (data) => {
 
 WebSocketObserver().listener("server/get", (data) => {
   //服务器名在 data.body 里面
-  if (!permssion.isMaster(data.WsSession)) return;
-
   let serverName = data.body.trim();
   let mcserver = serverModel.ServerManager().getServer(serverName);
   if (mcserver == null) {
@@ -24,11 +21,12 @@ WebSocketObserver().listener("server/get", (data) => {
 
   let serverData = mcserver.dataModel;
   serverData.serverName = serverName;
+  serverData.run=mcserver.isRun();
+  serverData.mcpingResult = mcPingProtocol.QueryMCPingTask(serverName);
   response.wsSend(data.ws, "server/get", serverData);
 });
 
 WebSocketObserver().listener("server/create", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
 
   let ServerConfig = JSON.parse(data.body);
   let serverName = ServerConfig.serverName.trim();
@@ -46,7 +44,6 @@ WebSocketObserver().listener("server/create", (data) => {
 });
 
 WebSocketObserver().listener("server/create_dir", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
 
   let ServerConfig = JSON.parse(data.body);
   try {
@@ -57,8 +54,7 @@ WebSocketObserver().listener("server/create_dir", (data) => {
   }
 });
 
-WebSocketObserver().listener("server/rebulider", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
+WebSocketObserver().listener("server/rebuilder", (data) => {
 
   let ServerConfig = JSON.parse(data.body);
   let oldServerName = ServerConfig.oldServerName.trim();
@@ -78,12 +74,11 @@ WebSocketObserver().listener("server/rebulider", (data) => {
   } else {
     serverModel.builder(oldServerName, ServerConfig);
   }
-  response.wsSend(data.ws, "server/rebulider", true);
+  response.wsSend(data.ws, "server/rebuilder", true);
   response.wsMsgWindow(data.ws, "修改完成√");
 });
 
 WebSocketObserver().listener("server/delete", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
 
   let serverName = data.body.trim();
   try {
@@ -99,7 +94,6 @@ WebSocketObserver().listener("server/delete", (data) => {
 
 //服务器批量启动与关闭
 WebSocketObserver().listener("server/opt_all", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
   let command = data.body.trim();
 
   try {

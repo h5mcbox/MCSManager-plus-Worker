@@ -15,7 +15,6 @@ README-traditional.md
 
 # self files
 server/
-users/
 .vscode/
 testServer/
 *.exe
@@ -24,7 +23,6 @@ docker_temp/
 
 
 # config files
-users/*.json
 server/*.json
 public/*.json
 McserverConfig.json

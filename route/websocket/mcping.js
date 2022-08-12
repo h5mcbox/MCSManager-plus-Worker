@@ -1,5 +1,4 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
-const { userCenter } = require("../../model/UserModel");
 const serverModel = require("../../model/ServerModel");
 const permssion = require("../../helper/Permission");
 const response = require("../../helper/Response");
@@ -8,22 +7,15 @@ const response = require("../../helper/Response");
 WebSocketObserver().listener("mcping/config_save", (data) => {
   const jsonObject = JSON.parse(data.body);
   const serverName = jsonObject.mcpingServerName;
-  const userName = data.WsSession.username;
-  const user = userCenter().get(userName);
-  if (!user) {
-    return;
-  }
-  if (permssion.isCanServer(userName, serverName)) {
-    const mcserver = serverModel.ServerManager().getServer(serverName);
-    mcserver.dataModel.mcpingConfig = {
-      mcpingName: jsonObject.mcpingConfig.mcpingName || "",
-      mcpingHost: jsonObject.mcpingConfig.mcpingHost || "",
-      mcpingPort: jsonObject.mcpingConfig.mcpingPort || "",
-      mcpingMotd: jsonObject.mcpingConfig.mcpingMotd || ""
-    };
-    // console.log('mcping mcserver.dataModel:', mcserver.dataModel)
-    mcserver.dataModel.save();
-  }
+  const mcserver = serverModel.ServerManager().getServer(serverName);
+  mcserver.dataModel.mcpingConfig = {
+    mcpingName: jsonObject.mcpingConfig.mcpingName || "",
+    mcpingHost: jsonObject.mcpingConfig.mcpingHost || "",
+    mcpingPort: jsonObject.mcpingConfig.mcpingPort || "",
+    mcpingMotd: jsonObject.mcpingConfig.mcpingMotd || ""
+  };
+  // console.log('mcping mcserver.dataModel:', mcserver.dataModel)
+  mcserver.dataModel.save();
   response.wsSend(data.ws, "mcping/config_save", true);
 });
 

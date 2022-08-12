@@ -5,7 +5,6 @@ const { WebSocketObserver } = require("../model/WebSocketModel");
 
 const permssion = require("../helper/Permission");
 const response = require("../helper/Response");
-const loginedContainer = require("../helper/LoginedContainer");
 const counter = require("../core/counter");
 
 require("express-ws")(router);
@@ -16,10 +15,8 @@ class WebsocketSession {
     this.login = config.login || false;
     this.uid = config.uid || null;
     this.ws = config.ws || null;
-    this.username = config.username || null;
     this.token = config.token || null;
     this.console = config.console || null;
-    this.sessionID = config.sessionID || null;
   }
   send(data) {
     if (data) response.wsSend(data.ws, data.resK, data.resV, data.body);
@@ -48,54 +45,34 @@ const MAX_ALIVE_COUNT = 60;
 router.ws("/ws", function (ws, req) {
   // 令牌
   let token = req.query[permssion.tokenName] || null;
-
   //无令牌 或 未登录
-  if (!token || !req.session["login"]) {
+  if (!token) {
     counter.plus("csrfCounter");
     ws.close();
     return;
   }
 
   token = token.trim();
-  let username = null;
   let status = false;
   let wsAliveHBCount = MAX_ALIVE_COUNT;
 
   //临时的会话id  一般只用于内部验证是否是这个tcp链接
   let uid = permssion.randomString(12) + Date.parse(new Date()).toString();
-  let session_id = req.sessionID;
 
-  MCSERVER.log("[ WS CREATE ] 新的 Ws 创建 会话ID: [", session_id, "]");
-
-  //从令牌管理器中 获取对应的用户
-  username = TokenManager.getToken(token);
+  MCSERVER.log("[ WS CREATE ] 新的 Ws 创建 Token ID: [", token, "]");
+  if (!TokenManager.hasToken(token)) {
+    MCSERVER.warning("错误令牌的 WS 尝试建立链接 | 已经阻止");
+    counter.plus("notPermssionCounter");
+    ws.close();
+    return;
+  }
 
   //Token 任务完成 | 删除
   TokenManager.delToken(token);
-  delete req.session["token"];
-  req.session.save();
-
-  //用户名检查
-  if (!username || typeof username != "string" || username.trim() == "") {
-    MCSERVER.warning("错误令牌的 WS 尝试建立链接 | 已经阻止", ["用户值:", username, " 令牌值:", token].join(" "));
-    counter.plus("notPermssionCounter");
-    ws.close();
-    return;
-  }
 
   //唯一性检查
   if (isWsOnline(token)) {
-    MCSERVER.warning("此令牌正在使用 | 阻止重复使用 | isWsOnline", ["用户值:", username, " 令牌值:", token].join(" "));
-    ws.close();
-    return;
-  }
-
-  username = username.trim();
-
-  //登录逻辑性缺陷检查
-  if (!loginedContainer.isLogined(session_id, username)) {
-    MCSERVER.warning("未经过登陆逻辑的用户尝试连接 | 已经阻止", ["用户值:", username, " 令牌值:", token].join(" "));
-    counter.plus("notPermssionCounter");
+    MCSERVER.warning("此令牌正在使用 | 阻止重复使用 | isWsOnline", [" 令牌值:", token].join(" "));
     ws.close();
     return;
   }
@@ -103,52 +80,26 @@ router.ws("/ws", function (ws, req) {
   //WebsocketSession 类生成
   let WsSession = new WebsocketSession({
     //Ws 判断身份条件,必须在 token 管理器与 Session 中认证登录
-    login: username && req.session["login"] ? true : false,
+    login: true,
     uid: uid,
-    sessionID: session_id,
     ws: ws,
-    username: username,
     token: token,
     console: null
   });
-
-  //Session 级别验证登录检查
-  if (!WsSession.login) {
-    MCSERVER.warning("不明身份者建立 ws 链接", "已经阻止 | 可能的用户值: " + WsSession.username);
-    counter.plus("notPermssionCounter");
-    ws.close();
-    return;
-  }
-
+  
   //状态标识
   status = true;
 
   //放置全局在线列表
   MCSERVER.allSockets[uid] = WsSession;
-  if (!MCSERVER.onlineUser[WsSession.username]) MCSERVER.onlineUser[WsSession.username] = WsSession;
 
   //检查通过..
-  MCSERVER.log("[ WebSocket INIT ]", " 用户:", username, "与服务器建立链接");
+  counter.plus("login");
+  MCSERVER.log("[ WebSocket INIT ]", " Backend已与服务器建立链接");
 
   //数据到达事件
   ws.on("message", function (data) {
     try {
-      //是否合法用户检查
-      if (!WsSession.login) {
-        //触发这里代表极为有可能有人正在攻击你
-        MCSERVER.warning("没有登录的用户正在尝试发送 Ws 命令", "已经阻止 | 可能的用户值: " + username);
-        counter.plus("notPermssionCounter");
-        ws.close();
-        return;
-      }
-
-      //在线用户容器检查
-      if (!MCSERVER.onlineUser[username]) {
-        counter.plus("userOnlineCounter");
-        MCSERVER.onlineUser[username] = WsSession;
-      }
-
-      //检查完毕 | 开始解析数据
       //自定义协议数据解析
       let loc = data.indexOf("\n\n");
       let reqHeader = data.substr(0, loc);
@@ -170,7 +121,6 @@ router.ws("/ws", function (ws, req) {
       WebSocketObserver().emit("ws/req", {
         ws: ws,
         req: req,
-        user: username,
         header: reqHeaderObj,
         body: reqBody,
         RequestValue: reqHeaderObj["RequestValue"],
@@ -187,36 +137,33 @@ router.ws("/ws", function (ws, req) {
     WebSocketClose();
   });
 
+  /*
   //Websocket 心跳包检查 | 10 秒递减一个链接健康指数
   var HBMask = setInterval(() => {
     // 超过指定次数不响应，代表链接丢失
     if (wsAliveHBCount <= 0) {
-      MCSERVER.log("[ WebSocket HBPackage ]", "用户", username, "长时间未响应心跳包 | 已自动断开");
+      MCSERVER.log("[ WebSocket HBPackage ]", "长时间未响应心跳包 | 已自动断开");
       WebSocketClose();
     }
     wsAliveHBCount--;
   }, 1000 * 10);
+  */
 
   //Websocket 关闭函数
   function WebSocketClose() {
     if (!status) return;
 
     ws.close();
-    clearInterval(HBMask);
+    //clearInterval(HBMask);
     status = false;
 
     //再删一次，保险
     TokenManager.delToken(token);
-    delete req.session["token"];
     WsSession = null;
-    req.session.save();
 
     //释放全局变量
-    if (MCSERVER.onlineUser[username]) {
-      delete MCSERVER.onlineUser[username];
-    }
     delete MCSERVER.allSockets[uid];
-    MCSERVER.log("[ WebSocket CLOSE ]", "用户", username, "已经断开链接");
+    MCSERVER.log("[ WebSocket CLOSE ]", "Backend已经断开链接");
   }
 });
 

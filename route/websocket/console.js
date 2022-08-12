@@ -1,7 +1,6 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
 const response = require("../../helper/Response");
 const serverModel = require("../../model/ServerModel");
-const permssion = require("../../helper/Permission");
 const { LogHistory } = require("../../helper/LogHistory");
 
 //日志缓存记录器
@@ -69,30 +68,28 @@ serverModel.ServerManager().on("open", (data) => {
 
 //控制请求监听控制台实例
 WebSocketObserver().listener("server/console/ws", (data) => {
-  let userName = data.WsSession.username;
+  //let userName = data.WsSession.username;
   let serverName = data.body.trim();
 
-  if (permssion.isCanServer(userName, serverName)) {
-    MCSERVER.log("[" + serverName + "] >>> 准许用户 " + userName + " 控制台监听");
+    MCSERVER.log("[" + serverName + "] >>> 准许控制台监听");
 
     // 设置监听终端
     data.WsSession["console"] = serverName;
 
     // 重置用户历史指针
     const instanceLogHistory = serverModel.ServerManager().getServer(serverName).logHistory;
-    if (instanceLogHistory) instanceLogHistory.setPoint(userName, 0);
+    if (instanceLogHistory) instanceLogHistory.setPoint("", 0);
     return;
-  }
 
-  MCSERVER.log("[" + serverName + "] 拒绝用户 " + userName + " 控制台监听");
-  data.WsSession["console"] = undefined;
+  MCSERVER.log("[" + serverName + "] 拒绝控制台监听");
 });
 
 //前端退出控制台界面
 WebSocketObserver().listener("server/console/remove", (data) => {
   //单页退出时触发
+  var serverName=data.body.trim();
   for (let k in MCSERVER.allSockets) {
-    if (MCSERVER.allSockets[k].uid == data.WsSession.uid) {
+    if (MCSERVER.allSockets[k].console === serverName) {
       MCSERVER.allSockets[k]["console"] = undefined;
       return;
     }

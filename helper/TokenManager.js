@@ -1,19 +1,16 @@
-const baseManagerModel = require("../model/baseManagerModel");
+let onlyTokenManager = new Set();
 
-let onlyTokenManager = new baseManagerModel.ModelManager();
-
-module.exports.addToken = (key, value) => {
-  if (onlyTokenManager.len >= 20) {
-    //TOken 请求最大等待队列长度,超过则统一删除
+module.exports.addToken = (key) => {
+  if (onlyTokenManager.size >= 20) {
+    //Token 请求最大等待队列长度,超过则统一删除
     onlyTokenManager.clear();
   }
-  onlyTokenManager.add(key, value);
+  onlyTokenManager.add(key);
 };
 
-module.exports.delToken = (key, value) => {
-  onlyTokenManager.del(key, value);
+module.exports.hasToken = (key) => {
+  return hasToken=onlyTokenManager.has(key);
 };
-
-module.exports.getToken = (key) => {
-  return onlyTokenManager.get(key);
+module.exports.delToken = (key) => {
+  onlyTokenManager.delete(key);
 };

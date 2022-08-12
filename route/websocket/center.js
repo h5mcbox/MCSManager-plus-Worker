@@ -4,13 +4,11 @@ const tools = require("../../core/tools");
 const response = require("../../helper/Response");
 const serverModel = require("../../model/ServerModel");
 const permssion = require("../../helper/Permission");
-const userModel = require("../../model/UserModel");
 const os = require("os");
 const mversion = require("../../helper/version");
 
 const MB_SIZE = 1024 * 1024;
 let serverM = serverModel.ServerManager();
-let userM = userModel.userCenter();
 
 //设置要定时清除的数据
 counter.initData(() => {
@@ -38,14 +36,8 @@ setInterval(function () {
     cacheCPU = (v * 100).toFixed(2);
     MCSERVER.dataCenter.cacheCPU = cacheCPU;
   });
-  let onliec = 0;
   let sockec = 0;
   let banipc = 0;
-  //统计在线用户
-  for (let k in MCSERVER.onlineUser) {
-    if (MCSERVER.onlineUser[k] == null) continue;
-    onliec++;
-  }
   //统计在线 Ws
   for (let k in MCSERVER.allSockets) {
     if (MCSERVER.allSockets[k] == null) continue;
@@ -66,18 +58,21 @@ setInterval(function () {
     //more
     serverCounter: serverM.getServerCounter(),
     runServerCounter: serverM.getRunServerCounter(),
-    userCounter: userM.getUserCounter(),
-    userOnlineCounter: onliec,
     WebsocketCounter: sockec,
     loginCounter: counter.get("login"), //登陆次数
-    banip: banipc, //封的ip
-    passwordError: counter.get("passwordError"), //密码错误次数
+    //banip: banipc, //封的ip
+    banip: -1,
+    //passwordError: counter.get("passwordError"), //密码错误次数
+    passwordError:-1,
+    userCounter: -1,
+    userOnlineCounter: -1,
     csrfCounter: counter.get("csrfCounter"), //可能存在的CSRF攻击次数
     notPermssionCounter: counter.get("notPermssionCounter"), //API的无权访问
     root: mversion.root,
     verisonA: mversion.verisonA,
     verisonB: mversion.verisonB,
-    system: mversion.system
+    system: mversion.system,
+    isPanel:false
   };
 
   let useMemBai = ((os.freemem() / os.totalmem()) * 100).toFixed(0);
@@ -88,8 +83,14 @@ setInterval(function () {
   setTimeout(() => counter.save(), 0); //让其异步地去保存
 }, MCSERVER.localProperty.data_center_times);
 
+//重启逻辑
+WebSocketObserver().listener("center/restart", (data) => {
+  MCSERVER.log("面板重启...");
+  process.send({restart:"./_app.js"});
+  process.emit("SIGINT");
+});
+
 //数据中心
 WebSocketObserver().listener("center/show", (data) => {
-  if (!permssion.isMaster(data.WsSession)) return;
   response.wsSend(data.ws, "center/show", cacheSystemInfo);
 });
