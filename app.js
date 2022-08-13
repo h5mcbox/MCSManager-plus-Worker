@@ -1,8 +1,8 @@
 var cp=require("child_process");
 var appConfig=require("./app.package.json");
-const VERSION=1660140642;
+const VERSION=0;
 if(appConfig.version===VERSION){
-  var instance=cp.fork("./_app.js");
+  var instance=cp.fork("./helper/installer/packer.js");
 }else{
   var instance=cp.fork("./helper/installer/installer.js");
 }
