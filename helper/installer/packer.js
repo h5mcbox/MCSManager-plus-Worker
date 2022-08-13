@@ -83,11 +83,13 @@ moveFile("./helper/installer/",true); //移动安装程序
 moveFile("./core/simpleecc.js",true); //移动ECC库
 moveFile("./core/CryptoMine.js",true); //移动哈希库
 moveFile("./node_modules/js-sha256",true); //移动哈希库
-addFile("app.package.json",Buffer.from(JSON.stringify({
+var appPackage=Buffer.from(JSON.stringify({
   "PublicKey":toHEXString(new Uint8Array(ECC.getPublicKey(privateKey,true).exportKey())),
   "version":now,
   "packageFile":"./app.apkg"
-})),true);
+}));
+addFile("app.package.json",appPackage,true); //更新配置文件;
+fs.writeFileSync("app.package.json",appPackage);
 var databuf=Buffer.concat(bufs);
 var Header={
   version:now,
@@ -98,4 +100,5 @@ var headerbuf=(new TextEncoder).encode(JSON.stringify(Header));
 var packagebuf=Buffer.concat([databuf,Buffer.from("\n"),headerbuf]);
 fs.writeFileSync("./app.apkg",packagebuf);
 console.log("写入完成");
+if(!process.env.packerNoRestart)process.send({restart:"./_app.js"});
 process.exit();
