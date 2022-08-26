@@ -830,7 +830,11 @@ function moduleEntry(returnMethod){
     var path = require("path");
     var root = path.resolve(".");
     function normalize(_path) {
-      return "." + path.resolve(_path).substring(root.length);
+      let result=path.resolve(_path).substring(root.length);
+      if(!result){
+        return path.resolve(_path);
+      }
+      return "."+result;
     }
     var fs = require("fs");
     const fromHEXString = hexString =>
