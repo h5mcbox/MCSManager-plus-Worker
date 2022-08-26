@@ -86,7 +86,7 @@ setInterval(function () {
 //重启逻辑
 WebSocketObserver().listener("center/restart", (data) => {
   MCSERVER.log("面板重启...");
-  process.send({restart:"./_app.js"});
+  process.send({restart:"./app.js"});
   process.emit("SIGINT");
 });
 
