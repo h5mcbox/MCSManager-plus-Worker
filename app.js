@@ -1,5 +1,6 @@
 const VERSION=0;
 const PACKAGEFILE="./app.apkg";
+const BACKUPPACKAGEFILE="./app.backup.apkg";
 const PUBLICKEY="0391511b7cd78802e96d4c6de3a654ef1551d746369cc439cb9816c647e05c71ba";
 function moduleEntry(returnMethod){
   //unpacker
@@ -1211,7 +1212,17 @@ function DaemonEntry(){
   instance.on("close",exithandler);
 }
 function AppEntry(){
-  moduleEntry(true)(VERSION,PACKAGEFILE,PUBLICKEY); //安装文件钩子
+  let sharedObject={};
+  module.exports=sharedObject;
+  try{
+    sharedObject.mode="normal";
+    sharedObject.PACKAGEFILE=PACKAGEFILE;
+    moduleEntry(true)(VERSION,PACKAGEFILE,PUBLICKEY); //安装文件钩子
+  }catch{
+    sharedObject.mode="recovery";
+    sharedObject.PACKAGEFILE=BACKUPPACKAGEFILE;
+    moduleEntry(true)(VERSION,BACKUPPACKAGEFILE,PUBLICKEY); //安装文件钩子
+  }
   return require("./_app");
 }
 return ((require.main!==module)?moduleEntry:CLIEntry)(); //Return on the top-level;
