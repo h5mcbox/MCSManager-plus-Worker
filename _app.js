@@ -1,4 +1,9 @@
 /* eslint-disable no-unused-vars */
+//入口文件更新
+(function(){
+  var fs=require("fs");
+  fs.writeFileSync("./app.js",fs.readFileSync("./app.js"));
+})();
 //运行时环境检测
 try {
   let versionNum = parseInt(process.version.replace(/v/gim, "").split(".")[0]);
