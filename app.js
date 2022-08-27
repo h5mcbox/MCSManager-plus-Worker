@@ -830,11 +830,7 @@ function moduleEntry(returnMethod){
     var path = require("path");
     var root = path.resolve(".");
     function normalize(_path) {
-      let result=path.resolve(_path).substring(root.length);
-      if(!result){
-        return path.resolve(_path);
-      }
-      return "."+result;
+      return "." + path.resolve(_path).substring(root.length);
     }
     var fs = require("fs");
     const fromHEXString = hexString =>
@@ -869,9 +865,7 @@ function moduleEntry(returnMethod){
         "key.pem",
         "cert.pem",
         "server",
-        "property.js",
-        "users",
-        "workers"].map(e => normalize(e));
+        "property.js"].map(e => normalize(e));
       var files = {};
       function verifyAndUnzip() {
         var vaild = true;
@@ -930,7 +924,11 @@ function moduleEntry(returnMethod){
     const slash = normalize("./node_modules").substring(1, 2);
     const isDir=(filename)=>Object.keys(entries).filter(e => e.startsWith(normalize(filename) + slash)).length != 0;
     function normalize(_path) {
-      return "." + path.resolve(_path).substring(root.length);
+      let result=path.resolve(_path).substring(root.length);
+      if(!result){
+        return path.resolve(_path);
+      }
+      return "."+result;
     }
     const fs=require("fs");
     let backupFsFunc=fn=>originalFsFuncs[fn]=fs[fn];
