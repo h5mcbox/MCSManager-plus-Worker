@@ -1,17 +1,17 @@
 /* eslint-disable no-unused-vars */
 //入口文件更新
-(function(){
-  var fs=require("fs");
-  fs.writeFileSync("./app.js",fs.readFileSync("./app.js"));
-  var sharedObject=require.main.exports;
-  if(sharedObject.mode==="recovery"){
-    fs.writeFileSync("./app.apkg",fs.readFileSync(sharedObject.PACKAGEFILE));
+(function () {
+  var fs = require("fs");
+  fs.writeFileSync("./app.js", fs.readFileSync("./app.js"));
+  var sharedObject = require.main.exports;
+  if (sharedObject.mode === "recovery") {
+    fs.writeFileSync("./app.apkg", fs.readFileSync(sharedObject.PACKAGEFILE));
     fs.unlinkSync(sharedObject.PACKAGEFILE);
     console.log("新版本文件损坏,还原更新...");
-    process.send({restart:"./app.js"});
+    process.send({ restart: "./app.js" });
     process.exit();
-  }else if(sharedObject.mode==="normal"){
-    if(fs.existsSync("./app.backup.apkg")){
+  } else if (sharedObject.mode === "normal") {
+    if (fs.existsSync("./app.backup.apkg")) {
       fs.unlinkSync("./app.backup.apkg")
     };
   }
@@ -28,7 +28,7 @@ try {
   //忽略任何版本检测导致的错误
 }
 
-if(!process.send){
+if (!process.send) {
   console.log("请运行app.js");
   process.exit(1);
 }
@@ -144,7 +144,8 @@ var app = express();
 
 //HSTS
 app.use(function (req, res, next) {
-  if (req.socket.encrypted && MCSERVER.localProperty.hsts) {
+  const { hsts, listen_type } = MCSERVER.localProperty
+  if (req.socket.encrypted && hsts && listen_type === "strict") {
     res.header("Strict-Transport-Securit", `max-age=${MCSERVER.localProperty.hsts_long};`);
   }
   next();
@@ -152,8 +153,7 @@ app.use(function (req, res, next) {
 
 //服务器实例初始化
 (function () {
-  var host = MCSERVER.localProperty.http_ip;
-  var port = MCSERVER.localProperty.http_port;
+  let { http_ip: host, http_port: port } = MCSERVER.localProperty;
   if (host == "::") host = "127.0.0.1";
   function appWrapper(...args) {
     return app.call(this, ...args);
@@ -177,7 +177,8 @@ app.use(function (req, res, next) {
     });
   }
   const BaseInstance = net.createServer(BaseService);
-  var HTTPInstance, HTTPSInstance;
+  const expressWs=require("express-ws");
+  let HTTPInstance, HTTPSInstance;
   switch (MCSERVER.localProperty.listen_type) {
     case "strict":
       HTTPInstance = http.createServer(HTTPService);
@@ -185,6 +186,7 @@ app.use(function (req, res, next) {
         cert: fs.readFileSync(MCSERVER.localProperty.cert_path),
         key: fs.readFileSync(MCSERVER.localProperty.key_path)
       }, appWrapper);
+      expressWs(app,HTTPSInstance);
       break;
     case "mixed":
       HTTPInstance = http.createServer(appWrapper);
@@ -192,9 +194,12 @@ app.use(function (req, res, next) {
         cert: fs.readFileSync(MCSERVER.localProperty.cert_path),
         key: fs.readFileSync(MCSERVER.localProperty.key_path)
       }, appWrapper);
+      expressWs(app,HTTPSInstance);
+      expressWs(app,HTTPInstance);
       break;
     case "onlyhttp":
       HTTPInstance = http.createServer(appWrapper);
+      expressWs(app,HTTPInstance);
       break;
     default:
       throw new TypeError("无效监听方式");
@@ -203,9 +208,6 @@ app.use(function (req, res, next) {
   MCSERVER.HTTPInstance = HTTPInstance;
   MCSERVER.BaseInstance = BaseInstance;
 })();
-
-//web Socket 框架
-require("express-ws")(app, MCSERVER.HTTPSInstance);
 
 //Cookie and Session 的基础功能
 app.use(cookieParser());
@@ -234,7 +236,7 @@ if (MCSERVER.localProperty.is_gzip) app.use(compression());
 
 //基础根目录
 //app.use("/public", express.static("./public"));
-app.get("/",function(req,res){
+app.get("/", function (req, res) {
   res.writeHead(200);
   res.write("<h1>This is just a stub.</h1>")
   res.end();
@@ -296,7 +298,7 @@ process.on("unhandledRejection", errorHandler);
   }
 })();
 
-app.use("/public",express.static("./public"));
+app.use("/public", express.static("./public"));
 //开始对 Oneline File Manager 模块进行必要的初始化
 MCSERVER.infoLog("OnlineFs", "正在初始化文件管理路由与中间件 ");
 
@@ -346,7 +348,7 @@ app.use("/fs", require("./onlinefs/controller/function"));
 app.get("*", function (req, res) {
   //404 页面
   res.status(404);
-  res.setHeader("Content-Type","text/html");
+  res.setHeader("Content-Type", "text/html");
   res.send(fs.readFileSync("./public/404.html"));
   res.end();
 });

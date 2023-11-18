@@ -1,6 +1,5 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
 const serverModel = require("../../model/ServerModel");
-const permssion = require("../../helper/Permission");
 const response = require("../../helper/Response");
 
 // 保存配置

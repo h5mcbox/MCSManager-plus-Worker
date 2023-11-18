@@ -1,22 +1,22 @@
-var readdir=require("./readdirRecurively");
-var ECC=require("../../core/simpleecc")("secp256k1");
-
-var {hash}=require("../../core/CryptoMine");
+const { signKey, packerNoRestart } = process.env;
+let readdir=require("./readdirRecurively");
+let ECC=require("../../core/simpleecc")("secp256k1");
+let {hash}=require("../../core/CryptoMine");
 const fromHEXString = hexString =>
   new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 
 const toHEXString = bytes =>
   bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
 const now=Math.floor(Date.now()/1000)
-var privateKey=ECC.importKey(false,fromHEXString(process.env.signKey).buffer);
-var fs=require("fs");
-var path=require("path");
-var Filenames=readdir(".");
-var root=path.resolve(".");
+let privateKey=ECC.importKey(false,fromHEXString(signKey).buffer);
+let fs=require("fs");
+let path=require("path");
+let Filenames=readdir(".");
+let root=path.resolve(".");
 function normalize(_path){
   return "."+path.resolve(_path).substring(root.length);
 }
-var exceptions=[
+let exceptions=[
   ".git",
   "server",
   "tmp_upload",
@@ -29,26 +29,26 @@ var exceptions=[
   "property.js",
   "helper/packer",
 ].map(e=>normalize(e));
-var bufs=[];
-var cursor=0;
-var entries=[];
+let bufs=[];
+let cursor=0;
+let entries=[];
 Filenames.forEach(e=>{
-  var skip=false;
+  let skip=false;
   exceptions.forEach(f=>normalize(e).startsWith(f)?skip=true:false);
   if(skip){
     console.log("skip:"+e);
     return false;
   }
   console.log("pack:"+e);
-  var filebuf=fs.readFileSync(e);
-  var fileEntry=[e,hash(filebuf),cursor,filebuf.length];
+  let filebuf=fs.readFileSync(e);
+  let fileEntry=[e,hash(filebuf),cursor,filebuf.length];
   entries.push(fileEntry);
   bufs.push(filebuf);
   cursor+=filebuf.length;
 });
 function addFile(filename,data,first){
-  var targetFilename=normalize(filename);
-  var fileEntry=[targetFilename,hash(data),cursor,data.length];
+  let targetFilename=normalize(filename);
+  let fileEntry=[targetFilename,hash(data),cursor,data.length];
   if(first){
     console.log("pack to head:"+targetFilename);
     entries.unshift(fileEntry);
@@ -61,7 +61,7 @@ function addFile(filename,data,first){
 }
 function moveFile(_startsWith,first){
   _startsWith=normalize(_startsWith);
-  var foundFiles=entries.filter(e=>e[0].startsWith(_startsWith));
+  let foundFiles=entries.filter(e=>e[0].startsWith(_startsWith));
   for(let i of foundFiles){
     let index=entries.indexOf(i);
     entries.splice(index,1);
@@ -77,15 +77,15 @@ function moveFile(_startsWith,first){
 const AppEntry=fs.readFileSync("app.js").toString();
 const AppEntryPatched=AppEntry.replaceAll("VERSION=0","VERSION="+now) //修改硬编码时间
 addFile("app.js",Buffer.from(AppEntryPatched.replaceAll("./helper/packer/packer.js","./app.js")),false); //修改入口
-var databuf=Buffer.concat(bufs);
-var Header={
+let databuf=Buffer.concat(bufs);
+let Header={
   version:now,
   entries:entries
 }
 Header.sign=toHEXString(new Uint8Array(ECC.ECDSA.sign(`${Header.version}:${JSON.stringify(Header.entries)}`,privateKey)));
-var headerbuf=(new TextEncoder).encode(JSON.stringify(Header));
-var packagebuf=Buffer.concat([databuf,Buffer.from("\n"),headerbuf]);
+let headerbuf=(new TextEncoder).encode(JSON.stringify(Header));
+let packagebuf=Buffer.concat([databuf,Buffer.from("\n"),headerbuf]);
 fs.writeFileSync("./app.apkg",packagebuf);
 console.log("写入完成");
-if(!process.env.packerNoRestart)process.send({restart:"./_app.js"});
+if(!packerNoRestart)process.send({restart:"./_app.js"});
 process.exit();

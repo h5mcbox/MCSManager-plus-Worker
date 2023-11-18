@@ -1,5 +1,6 @@
 //基础的路由定义
-const router = require("express")();
+const {Router} = require("express");
+const router = Router();
 
 //路由定义
 router.get("/404", function (req, res) {
@@ -20,10 +21,6 @@ router.get("/599", function (req, res) {
 
 router.get("/499", function (req, res) {
   res.send("499 安全机制触发");
-});
-
-router.get("/notlogin", function (req, res) {
-  res.send("您没有登录");
 });
 
 router.get("/token", function (req, res) {

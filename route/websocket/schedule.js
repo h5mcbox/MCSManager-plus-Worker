@@ -1,5 +1,4 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
-const permssion = require("../../helper/Permission");
 const response = require("../../helper/Response");
 const schedulejob = require("../../helper/Schedule");
 const tools = require("../../core/tools");

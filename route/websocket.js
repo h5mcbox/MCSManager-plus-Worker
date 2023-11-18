@@ -1,13 +1,14 @@
-const router = require("express")();
+const {Router} = require("express");
 
 const TokenManager = require("../helper/TokenManager");
 const { WebSocketObserver } = require("../model/WebSocketModel");
 
+const msgpack = require("../helper/msgpack");
 const permssion = require("../helper/Permission");
 const response = require("../helper/Response");
 const counter = require("../core/counter");
 
-require("express-ws")(router);
+const router = Router();
 
 //WebSocket 会话类
 class WebsocketSession {
@@ -100,18 +101,12 @@ router.ws("/ws", function (ws, req) {
   //数据到达事件
   ws.on("message", function (data) {
     try {
-      //自定义协议数据解析
-      let loc = data.indexOf("\n\n");
-      let reqHeader = data.substr(0, loc);
-      let reqBody = data.substr(loc + 2);
-
-      //Websocket 自定义协议解析
-      const reqHeaderObj = JSON.parse(reqHeader);
-      if (!reqHeaderObj) return;
+      //解码Message Pack数据包
+      let [header,body]=msgpack.decode(data);
 
       //Websocket 心跳包 | 前端 10 秒递增链接健康指数
       //当网络延迟特别高时，也能很好的降低指数. 将来指数够低时，将自动优化数据的发送
-      if (reqHeaderObj["RequestValue"] == "HBPackage") {
+      if (header["RequestValue"] == "HBPackage") {
         status = true;
         // 最高心跳包健康数
         wsAliveHBCount < MAX_ALIVE_COUNT && wsAliveHBCount++;
@@ -121,9 +116,9 @@ router.ws("/ws", function (ws, req) {
       WebSocketObserver().emit("ws/req", {
         ws: ws,
         req: req,
-        header: reqHeaderObj,
-        body: reqBody,
-        RequestValue: reqHeaderObj["RequestValue"],
+        header: header,
+        body: body,
+        RequestValue: header["RequestValue"],
         token: token,
         WsSession: WsSession
       });
@@ -137,7 +132,6 @@ router.ws("/ws", function (ws, req) {
     WebSocketClose();
   });
 
-  /*
   //Websocket 心跳包检查 | 10 秒递减一个链接健康指数
   var HBMask = setInterval(() => {
     // 超过指定次数不响应，代表链接丢失
@@ -147,14 +141,14 @@ router.ws("/ws", function (ws, req) {
     }
     wsAliveHBCount--;
   }, 1000 * 10);
-  */
+  
 
   //Websocket 关闭函数
   function WebSocketClose() {
     if (!status) return;
 
     ws.close();
-    //clearInterval(HBMask);
+    clearInterval(HBMask);
     status = false;
 
     //再删一次，保险
