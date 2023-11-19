@@ -28,7 +28,7 @@ WebSocketObserver().listener("server/get", (data) => {
 
 WebSocketObserver().listener("server/create", (data) => {
 
-  let ServerConfig = JSON.parse(data.body);
+  let ServerConfig = data.body;
   let serverName = ServerConfig.serverName.trim();
   if (serverName.indexOf(".") != -1) {
     response.wsMsgWindow(data.ws, '不可包含 "." 字符');
@@ -45,7 +45,7 @@ WebSocketObserver().listener("server/create", (data) => {
 
 WebSocketObserver().listener("server/create_dir", (data) => {
 
-  let ServerConfig = JSON.parse(data.body);
+  let ServerConfig = data.body;
   try {
     serverModel.createServerDir(ServerConfig.serverName, ServerConfig.cwd);
     response.wsMsgWindow(data.ws, "创建服务器目录已完成 √");
@@ -56,7 +56,7 @@ WebSocketObserver().listener("server/create_dir", (data) => {
 
 WebSocketObserver().listener("server/rebuilder", (data) => {
 
-  let ServerConfig = JSON.parse(data.body);
+  let ServerConfig = data.body;
   let oldServerName = ServerConfig.oldServerName.trim();
   let newServerName = ServerConfig.serverName.trim();
   const server = serverModel.ServerManager().getServer(oldServerName);

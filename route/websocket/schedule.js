@@ -38,7 +38,7 @@ WebSocketObserver().listener("schedule/list", (data) => {
 
 //创建计划任务
 WebSocketObserver().listener("schedule/create", (data) => {
-  let obj = JSON.parse(data.body) || {};
+  let obj = data.body || {};
 
     try {
       const list = getMineScheduleList(obj.servername);
@@ -55,7 +55,7 @@ WebSocketObserver().listener("schedule/create", (data) => {
 
 //删除计划任务
 WebSocketObserver().listener("schedule/delete", (data) => {
-  let obj = JSON.parse(data.body) || {};
+  let obj = data.body || {};
     try {
       schedulejob.deleteScheduleJob(obj.id || "");
       response.wsMsgWindow(data.ws, "删除序号:" + obj.id + "计划任务");

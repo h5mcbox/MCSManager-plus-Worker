@@ -10,7 +10,7 @@ MCSERVER.PAGE.DockerRes = [];
 
 //Docker 容器创建路由
 WebSocketObserver().listener("docker/new", (data) => {
-  let dockerConfig = JSON.parse(data.body);
+  let dockerConfig = data.body;
   //{dockerImageName: "",
   //dockerfile: "FROM java:latest↵RUN mkdir -p /mcsd↵RUN echo "Asia…teractive tzdata↵WORKDIR / mcsd↵RUN apt - get update"}
   let dockerImageName = dockerConfig.dockerImageName;
@@ -87,7 +87,7 @@ WebSocketObserver().listener("docker/setconfig", (data) => {
   //     serverName: "xxxx",
   //     dockerConfig: { ... }
   // }
-  let jsonObj = JSON.parse(data.body);
+  let jsonObj = data.body;
   if (jsonObj.serverName) {
     let serverName = jsonObj.serverName;
     let mcserver = serverModel.ServerManager().getServer(serverName);

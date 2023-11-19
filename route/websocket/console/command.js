@@ -7,7 +7,7 @@ const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //发送指令
 WebSocketObserver().listener("server/console/command", (data) => {
-  let par = JSON.parse(data.body);
+  let par = data.body;
   let serverName = par.serverName.trim();
   let command = par.command;
     //代表重启服务器

@@ -4,7 +4,7 @@ const response = require("../../helper/Response");
 
 // 保存配置
 WebSocketObserver().listener("mcping/config_save", (data) => {
-  const jsonObject = JSON.parse(data.body);
+  const jsonObject = data.body;
   const serverName = jsonObject.mcpingServerName;
   const mcserver = serverModel.ServerManager().getServer(serverName);
   mcserver.dataModel.mcpingConfig = {

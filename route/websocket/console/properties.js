@@ -24,7 +24,7 @@ WebSocketObserver().listener("server/properties", (data) => {
 
 //更新配置
 WebSocketObserver().listener("server/properties_update", (data) => {
-  let config = JSON.parse(data.body);
+  let config = data.body;
   let properties = config.properties;
   try {
     serverModel
