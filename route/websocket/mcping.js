@@ -15,7 +15,7 @@ WebSocketObserver().listener("mcping/config_save", (data) => {
   };
   // console.log('mcping mcserver.dataModel:', mcserver.dataModel)
   mcserver.dataModel.save();
-  response.wsSend(data.ws, "mcping/config_save", true);
+  response.wsResponse(data, true);
 });
 
 // 获取配置
@@ -24,7 +24,7 @@ WebSocketObserver().listener("mcping/config", (data) => {
   const serverName = data.body || "";
   if (serverName) {
     const mcserver = serverModel.ServerManager().getServer(serverName);
-    response.wsSend(data.ws, "mcping/config", mcserver.dataModel.mcpingConfig);
+    response.wsResponse(data, mcserver.dataModel.mcpingConfig);
     mcserver.dataModel.save();
   }
 });

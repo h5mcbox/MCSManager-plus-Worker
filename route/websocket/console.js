@@ -8,10 +8,9 @@ MCSERVER.consoleLog = {};
 
 //控制台信息广播
 function selectWebsocket(serverName, callback) {
-  let all = MCSERVER.allSockets;
-  for (let k in all) {
-    if (all[k]["console"] === serverName) {
-      callback(all[k]);
+  for (let client of Object.values(MCSERVER.allSockets)) {
+    if (client["console"] === serverName) {
+      callback(client);
     }
   }
 }
@@ -68,7 +67,6 @@ serverModel.ServerManager().on("open", (data) => {
 
 //控制请求监听控制台实例
 WebSocketObserver().listener("server/console/ws", (data) => {
-  //let userName = data.WsSession.username;
   let serverName = data.body.trim();
 
   MCSERVER.log("[" + serverName + "] >>> 准许控制台监听");
@@ -80,17 +78,15 @@ WebSocketObserver().listener("server/console/ws", (data) => {
   const instanceLogHistory = serverModel.ServerManager().getServer(serverName).logHistory;
   if (instanceLogHistory) instanceLogHistory.setPoint("", 0);
   return;
-
-  MCSERVER.log("[" + serverName + "] 拒绝控制台监听");
 });
 
 //前端退出控制台界面
 WebSocketObserver().listener("server/console/remove", (data) => {
   //单页退出时触发
   var serverName = data.body.trim();
-  for (let k in MCSERVER.allSockets) {
-    if (MCSERVER.allSockets[k].console === serverName) {
-      MCSERVER.allSockets[k]["console"] = undefined;
+  for (let client of Object.values(MCSERVER.allSockets)) {
+    if (client.console === serverName) {
+      client.console = undefined;
       return;
     }
   }
@@ -99,6 +95,7 @@ WebSocketObserver().listener("server/console/remove", (data) => {
 // 缓冲区定时发送频率，默认限制两秒刷新缓冲区
 const consoleBuffer = {};
 setInterval(() => {
+  const totalBuffers = {};
   for (const serverName in consoleBuffer) {
     try {
       let data = consoleBuffer[serverName];
@@ -115,6 +112,8 @@ setInterval(() => {
       data = data.replace(/\n/gim, "\r\n");
       data = data.replace(/\r\r\n/gim, "\r\n");
       //刷新每个服务器的缓冲数据
+      totalBuffers[serverName] = data;
+      /*
       selectWebsocket(serverName, (socket) => {
         socket.send({
           ws: socket.ws,
@@ -123,6 +122,7 @@ setInterval(() => {
           body: data
         });
       });
+      */
       // 释放内存并删除键
       consoleBuffer[serverName] = undefined;
       delete consoleBuffer[serverName];
@@ -130,6 +130,11 @@ setInterval(() => {
       MCSERVER.log("实例", serverName, "日志周期性广播任务错误:");
       console.log(error);
       continue;
+    }
+  }
+  if (Object.keys(totalBuffers).length > 0) {
+    for (let client of Object.values(MCSERVER.allSockets)) {
+      response.wsSend(client.ws, "server/console/ws", {}, totalBuffers);
     }
   }
 }, MCSERVER.localProperty.console_send_times);

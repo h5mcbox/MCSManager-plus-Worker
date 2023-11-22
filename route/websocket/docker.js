@@ -68,7 +68,7 @@ WebSocketObserver().listener("docker/new", (data) => {
 //结果列表获取
 //路由
 WebSocketObserver().listener("docker/res", (data) => {
-  response.wsSend(data.ws, "docker/res", MCSERVER.PAGE.DockerRes);
+  response.wsResponse(data, MCSERVER.PAGE.DockerRes);
 });
 
 //获取配置
@@ -76,7 +76,7 @@ WebSocketObserver().listener("docker/config", (data) => {
   let serverName = data.body || "";
   if (serverName) {
     let mcserver = serverModel.ServerManager().getServer(serverName);
-    response.wsSend(data.ws, "docker/config", mcserver.dataModel.dockerConfig);
+    response.wsResponse(data, mcserver.dataModel.dockerConfig);
     mcserver.dataModel.save();
   }
 });

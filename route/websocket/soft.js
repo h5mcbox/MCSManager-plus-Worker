@@ -3,7 +3,7 @@ const response = require("../../helper/Response");
 
 //获取信息
 WebSocketObserver().listener("soft/view", (data) => {
-  response.wsSend(data.ws, "soft/view", {
+  response.wsResponse(data, {
     softConfig: MCSERVER.softConfig
   });
 });

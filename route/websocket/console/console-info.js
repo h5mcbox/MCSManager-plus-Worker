@@ -13,7 +13,7 @@ WebSocketObserver().listener("server/console", (data) => {
   let serverData = serverModel.ServerManager().getServer(serverName);
   let sysMonery = ((os.freemem() / 1024 / (os.totalmem() / 1024)) * 100).toFixed(2);
   // let cpu = MCSERVER.dataCenter.cacheCPU;
-  response.wsSend(data.ws, "server/console", {
+  response.wsResponse(data, {
     serverData: serverData.dataModel,
     run: serverData.isRun(),
     sysMonery: sysMonery,

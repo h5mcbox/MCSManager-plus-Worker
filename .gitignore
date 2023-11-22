@@ -15,6 +15,7 @@ core/*.json
 public/common/URL.js
 property.js
 !model/init_config/property.js
+info.json
 
 # builds
 app.apkg

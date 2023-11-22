@@ -3,7 +3,6 @@ const counter = require("../../core/counter");
 const tools = require("../../core/tools");
 const response = require("../../helper/Response");
 const serverModel = require("../../model/ServerModel");
-const permssion = require("../../helper/Permission");
 const os = require("os");
 const mversion = require("../../helper/version");
 
@@ -85,12 +84,12 @@ setInterval(function () {
 
 //重启逻辑
 WebSocketObserver().listener("center/restart", (data) => {
-  MCSERVER.log("面板重启...");
+  MCSERVER.log("Worker重启...");
   process.send({restart:"./app.js"});
   process.emit("SIGINT");
 });
 
 //数据中心
 WebSocketObserver().listener("center/show", (data) => {
-  response.wsSend(data.ws, "center/show", cacheSystemInfo);
+  response.wsResponse(data, cacheSystemInfo);
 });

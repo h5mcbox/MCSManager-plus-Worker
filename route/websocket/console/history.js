@@ -11,16 +11,16 @@ WebSocketObserver().listener("server/console/history", (data) => {
   let serverName = bodyJson["serverName"] || "";
   const logHistory = serverModel.ServerManager().getServer(serverName).logHistory;
   if (!logHistory) {
-    response.wsSend(data.ws, "server/console/history", "terminalBack", "[控制面板]: 暂无任何历史记录.\r\n");
+    response.wsResponse(data, "terminalBack", "[控制面板]: 暂无任何历史记录.\r\n");
     return;
   }
   logHistory.readLine("", HISTORY_SIZE_LINE, (sendText) => {
     if (sendText) {
       sendText = sendText.replace(/\n/gim, "\r\n");
       sendText = sendText.replace(/\r\r\n/gim, "\r\n");
-      response.wsSend(data.ws, "server/console/history", "terminalBack", sendText);
+      response.wsResponse(data, "terminalBack", sendText);
     } else {
-      response.wsSend(data.ws, "server/console/history", "terminalBack", "[控制面板]: 无法再读取更多的服务端日志.\r\n");
+      response.wsResponse(data, "terminalBack", "[控制面板]: 无法再读取更多的服务端日志.\r\n");
     }
   });
 });
@@ -36,7 +36,7 @@ WebSocketObserver().listener("server/console/history_reverse", (data) => {
     if (sendText) {
       sendText = sendText.replace(/\n/gim, "\r\n");
       sendText = sendText.replace(/\r\r\n/gim, "\r\n");
-      response.wsSend(data.ws, "server/console/history", "terminalBack", sendText);
+      response.wsResponse(data, "terminalBack", sendText);
     }
   });
 });

@@ -5,7 +5,7 @@ const mcPingProtocol = require("../../helper/MCPingProtocol");
 
 WebSocketObserver().listener("server/view", (data) => {
   let value = serverModel.ServerManager().getServerList();
-  response.wsSend(data.ws, "server/view", {
+  response.wsResponse(data, {
     items: value
   });
 });
@@ -21,9 +21,9 @@ WebSocketObserver().listener("server/get", (data) => {
 
   let serverData = mcserver.dataModel;
   serverData.serverName = serverName;
-  serverData.run=mcserver.isRun();
+  serverData.run = mcserver.isRun();
   serverData.mcpingResult = mcPingProtocol.QueryMCPingTask(serverName);
-  response.wsSend(data.ws, "server/get", serverData);
+  response.wsResponse(data, serverData);
 });
 
 WebSocketObserver().listener("server/create", (data) => {
@@ -74,7 +74,7 @@ WebSocketObserver().listener("server/rebuilder", (data) => {
   } else {
     serverModel.builder(oldServerName, ServerConfig);
   }
-  response.wsSend(data.ws, "server/rebuilder", true);
+  response.wsResponse(data, true);
   response.wsMsgWindow(data.ws, "修改完成√");
 });
 
@@ -84,10 +84,10 @@ WebSocketObserver().listener("server/delete", (data) => {
   try {
     serverModel.deleteServer(serverName);
 
-    response.wsSend(data.ws, "server/delete", true);
+    response.wsResponse(data, true);
     response.wsMsgWindow(data.ws, "删除服务器完成√");
   } catch (e) {
-    response.wsSend(data.ws, "server/delete", null);
+    response.wsResponse(data, null);
     response.wsMsgWindow(data.ws, "删除服务器失败" + e);
   }
 });

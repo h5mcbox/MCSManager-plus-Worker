@@ -102,7 +102,8 @@ router.ws("/ws", function (ws, req) {
   ws.on("message", function (data) {
     try {
       //解码Message Pack数据包
-      let [header,body]=msgpack.decode(data);
+      const [header,body]=msgpack.decode(data);
+      const {RequestID}=header;
 
       //Websocket 心跳包 | 前端 10 秒递增链接健康指数
       //当网络延迟特别高时，也能很好的降低指数. 将来指数够低时，将自动优化数据的发送
@@ -117,7 +118,8 @@ router.ws("/ws", function (ws, req) {
         ws: ws,
         req: req,
         header: header,
-        body: body,
+        RequestID,
+        body,
         RequestValue: header["RequestValue"],
         token: token,
         WsSession: WsSession

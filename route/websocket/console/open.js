@@ -14,7 +14,7 @@ WebSocketObserver().listener("server/console/open", (data) => {
       response.wsMsgWindow(data.ws, "服务器无法启动,建议检查配置或权限");
       return;
     }
-    response.wsSend(data.ws, "server/console/open", true);
+    response.wsResponse(data, true);
     // 传递开启服务端事件
     serverModel.ServerManager().emit("open_next", {
       serverName: serverName
@@ -23,7 +23,7 @@ WebSocketObserver().listener("server/console/open", (data) => {
     response.wsMsgWindow(data.ws, "" + err);
   }
   return;
-  response.wsSend(data.ws, "server/console/open", null);
+  //response.wsResponse(data, "server/console/open", null);
 });
 
 // 服务端开启后的第一事件

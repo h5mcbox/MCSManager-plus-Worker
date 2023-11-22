@@ -30,7 +30,7 @@ WebSocketObserver().listener("schedule/list", (data) => {
   // let list = MCSERVER.Schedule.dataModel.list;
   let sendlist = getMineScheduleList(servername);
 
-    response.wsSend(data.ws, "schedule/list", {
+    response.wsResponse(data, {
       servername: servername,
       schedules: sendlist
     });

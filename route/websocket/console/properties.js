@@ -14,7 +14,7 @@ WebSocketObserver().listener("server/properties", (data) => {
         response.wsMsgWindow(data.ws, "properties 文件不存在或读取出错！请自行检查或确认是否存在以及格式正确.");
         return;
       }
-      response.wsSend(data.ws, "server/properties", {
+      response.wsResponse(data, {
         run: serverModel.ServerManager().getServer(serverName).isRun(),
         serverName: serverName,
         properties: properties
@@ -54,7 +54,7 @@ WebSocketObserver().listener("server/properties_update_reload", (data) => {
           return;
         }
         //将数据在来一次，前端路由会动态处理
-        response.wsSend(data.ws, "server/properties", {
+        response.wsResponse(data, {
           run: serverModel.ServerManager().getServer(serverName).isRun(),
           serverName: serverName,
           properties: properties
