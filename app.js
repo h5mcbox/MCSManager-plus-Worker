@@ -371,7 +371,6 @@ function moduleEntry(returnMethod) {
     function normalize(_path) {
       return "." + path.resolve(_path).substring(root.length);
     }
-    var fs = require("fs");
     const fromHEXString = hexString =>
       new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     /**
@@ -624,7 +623,6 @@ function moduleEntry(returnMethod) {
     });
 
     mod._extensions[".js"] = function (_module, filename) {
-      if (module.id.includes("fs")) throw "asd";
       let targetBuffer = entries[normalize(filename)];
       if (!targetBuffer) {
         targetBuffer = fs.readFileSync(filename)
