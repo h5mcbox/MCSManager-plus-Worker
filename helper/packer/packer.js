@@ -1,5 +1,5 @@
 const { signKey, packerNoRestart } = process.env;
-const { gzipSync } = require("node:zlib")
+const { brotliCompressSync } = require("node:zlib");
 let readdir = require("./readdirRecurively");
 let ECC = require("../../core/simpleecc")("secp256k1");
 let { hash } = require("../../core/CryptoMine");
@@ -86,7 +86,7 @@ let Header = {
 }
 Header.sign = toHEXString(new Uint8Array(ECC.ECDSA.sign(`${Header.version}:${JSON.stringify(Header.entries)}`, privateKey)));
 let headerbuf = (new TextEncoder).encode(JSON.stringify(Header));
-let packagebuf = gzipSync(Buffer.concat([databuf, Buffer.from("\n"), headerbuf]));
+let packagebuf = brotliCompressSync(Buffer.concat([databuf, Buffer.from("\n"), headerbuf]));
 fs.writeFileSync("./app.apkg", packagebuf);
 console.log("写入完成");
 if (!packerNoRestart) process.send({ restart: "./_app.js" });
