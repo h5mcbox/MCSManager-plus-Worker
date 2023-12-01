@@ -30,12 +30,19 @@ jobs:
           npm install
           node-prune
           node app
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mcsmanager-build
+          path: |
+            ./dist/app.apkg
+            ./dist/app.js
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./app.apkg
-            ./app.js
+            ./dist/app.apkg
+            ./dist/app.js
           token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
         if: startsWith(github.ref, 'refs/tags/')
         env:
