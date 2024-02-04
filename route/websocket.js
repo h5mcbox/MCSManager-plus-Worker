@@ -117,7 +117,7 @@ router.ws("/ws", function (ws, req) {
       WebSocketObserver().emit("ws/req", {
         ws: ws,
         req: req,
-        header: header,
+        header,
         RequestID,
         body,
         RequestValue: header["RequestValue"],

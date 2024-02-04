@@ -1,5 +1,5 @@
 const { signKey, packerNoRestart } = process.env;
-const { brotliCompressSync } = require("node:zlib");
+const { brotliCompressSync, constants } = require("node:zlib");
 let readdir = require("./readdirRecurively");
 let ECC = require("../../core/simpleecc")("secp256k1");
 let { hash } = require("../../core/CryptoMine");
@@ -23,8 +23,7 @@ let exceptions = [
   "server",
   "tmp_upload",
   "logs",
-  "app.apkg",
-  "app.js",
+  "dist/",
   "app.package.json",
   "cert.pem",
   "key.pem",
@@ -93,8 +92,8 @@ let Header = {
 }
 Header.sign = toHEXString(new Uint8Array(ECC.ECDSA.sign(`${Header.version}:${JSON.stringify(Header.entries)}`, privateKey)));
 let headerbuf = (new TextEncoder).encode(JSON.stringify(Header));
-let packagebuf = brotliCompressSync(Buffer.concat([databuf, Buffer.from("\n"), headerbuf]));
-fs.mkdirSync("./dist",{recursive:true});
+let packagebuf = brotliCompressSync(Buffer.concat([databuf, Buffer.from("\n"), headerbuf]), { params: { [constants.BROTLI_PARAM_QUALITY]: 4 } });
+fs.mkdirSync("./dist", { recursive: true });
 fs.writeFileSync("./dist/app.apkg", packagebuf);
 fs.writeFileSync("./dist/app.js", AppEntryPatchedSecond);
 console.log("写入完成");

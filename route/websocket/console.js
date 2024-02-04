@@ -77,7 +77,7 @@ WebSocketObserver().listener("server/console/ws", (data) => {
   // 重置用户历史指针
   const instanceLogHistory = serverModel.ServerManager().getServer(serverName).logHistory;
   if (instanceLogHistory) instanceLogHistory.setPoint("", 0);
-  return;
+  return response.wsResponse(data,null,"");
 });
 
 //前端退出控制台界面
@@ -87,9 +87,10 @@ WebSocketObserver().listener("server/console/remove", (data) => {
   for (let client of Object.values(MCSERVER.allSockets)) {
     if (client.console === serverName) {
       client.console = undefined;
-      return;
+      return response.wsResponse(data,true);
     }
   }
+  return response.wsResponse(data,false);
 });
 
 // 缓冲区定时发送频率，默认限制两秒刷新缓冲区
