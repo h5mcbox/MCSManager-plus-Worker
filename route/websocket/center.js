@@ -85,8 +85,11 @@ setInterval(function () {
 //重启逻辑
 WebSocketObserver().listener("center/restart", (data) => {
   MCSERVER.log("Worker重启...");
-  process.send({restart:"./app.js"});
-  process.emit("SIGINT");
+  response.wsResponse(data, true);
+  process.nextTick(()=>{
+    process.send({restart:"./app.js"});
+    process.emit("SIGINT");
+  });
 });
 
 //数据中心
