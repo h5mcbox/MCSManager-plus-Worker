@@ -14,13 +14,13 @@ WebSocketObserver().listener("server/console/command", (data) => {
     if (command == "__restart__") {
       serverModel.ServerManager().getServer(serverName).restart();
       response.wsMsgWindow(data.ws, "服务器正在重启..");
-      return;
+      return response.wsResponse(data, false);
     }
     //强制结束服务端进程
     if (command == "__killserver__") {
       serverModel.ServerManager().getServer(serverName).kill();
       response.wsMsgWindow(data.ws, "服务器结束进程");
-      return;
+      return response.wsResponse(data, false);
     }
     //通过命令方法停止服务端
     if (command == "__stop__") {
@@ -31,11 +31,11 @@ WebSocketObserver().listener("server/console/command", (data) => {
         server._onceStopRestart = true;
       }
       server.stopServer();
-      return;
+      return response.wsResponse(data, false);
     }
     //不是特殊命令，则直接执行
     serverModel.sendCommand(serverName, command);
-    return;
+    return response.wsResponse(data, false);
 });
 
 //服务端退出之后第一事件
@@ -49,4 +49,5 @@ serverModel.ServerManager().on("exit_next", (data) => {
 
   // 关闭 mcping 定时器
   mcPingProtocol.DestroyMCPingTask(data.serverName);
+  return response.wsResponse(data, true);
 });

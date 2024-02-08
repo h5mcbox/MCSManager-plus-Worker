@@ -57,11 +57,13 @@ WebSocketObserver().listener("docker/new", (data) => {
     process.on("error", () => {
       pushRes("构建出错");
     });
+    return response.wsResponse(data, true);
     // process.stdout.on('data', (data) => console.log(iconv.decode(data, 'utf-8')));
     // process.stderr.on('data', (data) => console.log(iconv.decode(data, 'utf-8')));
   } catch (err) {
     MCSERVER.warning("创建出错：", err);
     pushRes("构建错误");
+    return response.wsResponse(data, false);
   }
 });
 
@@ -79,6 +81,7 @@ WebSocketObserver().listener("docker/config", (data) => {
     response.wsResponse(data, mcserver.dataModel.dockerConfig);
     mcserver.dataModel.save();
   }
+  return response.wsResponse(data, false);
 });
 
 //设置配置
@@ -94,5 +97,6 @@ WebSocketObserver().listener("docker/setconfig", (data) => {
     mcserver.dataModel.dockerConfig = jsonObj.dockerConfig;
     mcserver.dataModel.save();
     response.wsMsgWindow(data.ws, "操作成功，数据已保存");
+    return response.wsResponse(data, true);
   }
 });

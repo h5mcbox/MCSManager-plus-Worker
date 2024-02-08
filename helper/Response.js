@@ -46,6 +46,6 @@ module.exports.wsResponse = ({ ws, RequestID, RequestValue: info }, value, body 
   wsSend(ws, info, value, body, RequestID);
 }
 
-module.exports.wsMsgWindow = (ws, msg = "欢迎使用！") => {
+module.exports.wsMsgWindow = (ws, msg = "") => {
   wsSend(ws, "window/msg", {}, msg);
 };

@@ -27,4 +27,5 @@ WebSocketObserver().listener("mcping/config", (data) => {
     response.wsResponse(data, mcserver.dataModel.mcpingConfig);
     mcserver.dataModel.save();
   }
+  return response.wsResponse(data, false);
 });

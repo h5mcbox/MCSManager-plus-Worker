@@ -48,4 +48,5 @@ WebSocketObserver().listener("server/console/history_reset", (data) => {
   const logHistory = serverModel.ServerManager().getServer(serverName).logHistory;
   if (!logHistory) return;
   logHistory.setPoint("", 0);
+  return response.wsResponse(data, true);
 });

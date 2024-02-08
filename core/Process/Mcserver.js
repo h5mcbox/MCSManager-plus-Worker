@@ -1,6 +1,8 @@
 const ServerProcess = require("./BaseMcserver");
 const DataModel = require("../DataModel");
 const properties = require("properties");
+const Yaml = require("yaml");
+const ObjectFlatter = require("../../helper/ObjectFlatter");
 const fs = require("fs");
 const tools = require("../tools");
 
@@ -26,7 +28,7 @@ class MinecraftServer extends ServerProcess {
     this.dataModel.autoRestart = false; //是否自动重启
     this.dataModel.schedule = []; //计划任务配置项目
 
-    this.properties = undefined; //服务端配置表
+    this.properties = {}; //服务端配置表
 
     //Docker 容器是否启用
     // this.isDocker = false;
@@ -79,7 +81,7 @@ class MinecraftServer extends ServerProcess {
     //mcping配置
     this.dataModel.mcpingConfig = this.configureParams(args, "mcpingConfig", this.dataModel.mcpingConfig);
 
-    this.propertiesLoad();
+    for (const name of this.propertiesList()) this.propertiesRead(name);
   }
 
   // 修改实例信息
@@ -102,35 +104,70 @@ class MinecraftServer extends ServerProcess {
     this.dataModel.save();
   }
 
-  propertiesLoad(callback) {
-    //配置读取
-    properties.parse(
-      this.dataModel.cwd + "/server.properties",
-      {
-        path: true
-      },
-      (err, obj) => {
-        //Note: 这里callback似乎会执行两次
-        //箭头函数this 并且这个不需要保存到配置文件，所以不应该在datamodel
-        this.properties = obj;
-        callback && callback(this.properties, err);
-      }
-    );
+  propertiesList() {
+    return fs.readdirSync(this.dataModel.cwd).filter(e => (e.endsWith(".properties") || e.endsWith(".yml") || e === "eula.txt"));
   }
 
-  propertiesSave(newProperties, callback) {
-    //解析
-    let text = properties.stringify(newProperties, {
-      separator: "="
-    });
-    //properties 库自动给等于两边加入了空格，现在去除
-    text = text.replace(/ = /gim, "=");
-    // 写入数据, 文件不存在会自动创建
-    fs.writeFile(this.dataModel.cwd + "/server.properties", text, () => {
-      this.propertiesLoad((properties, propertiesError) => {
-        callback && callback(properties, propertiesError);
+  /**
+   * @param {String} filename 
+   * @param {*} callback 
+   */
+  propertiesRead(filename, callback) {
+    if (filename.endsWith(".properties") || filename === "eula.txt") {
+      //配置读取
+      properties.parse(
+        `${this.dataModel.cwd}/${filename}`,
+        {
+          path: true
+        },
+        (err, properties) => {
+          //Note: 这里callback似乎会执行两次
+          //箭头函数this 并且这个不需要保存到配置文件，所以不应该在datamodel
+          this.properties[filename] = properties;
+          callback && callback(err, ObjectFlatter.flat(this.properties[filename]));
+        }
+      );
+    } else if (filename.endsWith(".yml")) {
+      try {
+        let yaml = fs.readFileSync(`${this.dataModel.cwd}/${filename}`).toString();
+        let properties = ObjectFlatter.flat(Yaml.parse(yaml));
+        this.properties[filename] = properties;
+        callback && callback(null, properties);
+      } catch (err) {
+        callback && callback(err, null);
+      }
+    } else {
+      callback && callback(new TypeError("Invaild filename."), null);
+    }
+  }
+
+  propertiesSave(filename = "", newProperties, callback) {
+    if (filename.endsWith(".properties") || filename === "eula.txt") {
+      //解析
+      let text = properties.stringify(ObjectFlatter.deflat(newProperties), {
+        separator: "="
       });
-    });
+      //properties 库自动给等于两边加入了空格，现在去除
+      text = text.replace(/ = /gim, "=");
+      // 写入数据, 文件不存在会自动创建
+      fs.writeFileSync(`${this.dataModel.cwd}/${filename}`, text);
+      this.propertiesRead(filename, (propertiesError, properties) => {
+        callback && callback(propertiesError, properties);
+      });
+    } else if (filename.endsWith(".yml")) {
+      try {
+        let properties = Yaml.stringify(ObjectFlatter.deflat(newProperties));
+        // 写入数据, 文件不存在会自动创建
+        fs.writeFileSync(`${this.dataModel.cwd}/${filename}`, properties);
+        this.propertiesRead(filename, (propertiesError, properties) => {
+          callback && callback(propertiesError, properties);
+        });
+      } catch (err) {
+        callback && callback(err, null);
+      }
+    } else {
+      callback && callback(new TypeError("Invaild filename."), null);
+    }
   }
 }
 

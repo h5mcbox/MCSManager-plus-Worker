@@ -11,9 +11,9 @@ WebSocketObserver().listener("server/console/autorestart", (data) => {
   try {
     server.save();
     response.wsMsgWindow(data.ws, "更改设置成功！");
+    return response.wsResponse(data, true);
   } catch (err) {
     response.wsMsgWindow(data.ws, "更改设置失败！不正常，请刷新网页重新设置!");
+    return response.wsResponse(data, false);
   }
-  return;
-  response.wsMsgWindow(data.ws, "权限不足!您并不拥有此服务器.");
 });

@@ -7,6 +7,7 @@ WebSocketObserver().listener("menu", (data) => {
 
   if (data.WsSession.login == false) {
     response.wsMsgWindow(data.ws, "身份信息丢失，请重新登陆补全身份信息");
-    return;
+    return response.wsResponse(data, false);
   }
+  return response.wsResponse(data, true);
 });

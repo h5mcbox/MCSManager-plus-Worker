@@ -44,12 +44,14 @@ WebSocketObserver().listener("schedule/create", (data) => {
     const list = getMineScheduleList(obj.servername);
     if (list.length > MAX_MASK) {
       response.wsMsgWindow(data.ws, "到达创建数量上限！");
-      return;
+      return response.wsResponse(data, false);
     }
     CreateScheduleJob(obj);
     response.wsMsgWindow(data.ws, "创建计划任务成功 √");
+    return response.wsResponse(data, true);
   } catch (err) {
     response.wsMsgWindow(data.ws, "错误！创建失败:" + err);
+    return response.wsResponse(data, false);
   }
 });
 
@@ -61,5 +63,6 @@ WebSocketObserver().listener("schedule/delete", (data) => {
     response.wsMsgWindow(data.ws, "删除序号:" + obj.id + "计划任务");
   } catch (err) {
     response.wsMsgWindow(data.ws, "删除失败！" + err);
+    return response.wsResponse(data, false);
   }
 });

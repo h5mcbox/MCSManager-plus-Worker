@@ -16,7 +16,7 @@ WebSocketObserver().listener("server/get", (data) => {
   let mcserver = serverModel.ServerManager().getServer(serverName);
   if (mcserver == null) {
     response.wsMsgWindow(data.ws, "服务端 " + serverName + " 不存在！请刷新或自行检查。");
-    return;
+    return response.wsResponse(data, false);
   }
 
   let serverData = mcserver.dataModel;
@@ -32,15 +32,16 @@ WebSocketObserver().listener("server/create", (data) => {
   let serverName = ServerConfig.serverName.trim();
   if (serverName.indexOf(".") != -1) {
     response.wsMsgWindow(data.ws, '不可包含 "." 字符');
-    return;
+    return response.wsResponse(data, false);
   }
   try {
     serverModel.createServer(serverName, ServerConfig);
   } catch (err) {
     response.wsMsgWindow(data.ws, "创建出错:" + err);
-    return;
+    return response.wsResponse(data, false);
   }
-  response.wsMsgWindow(data.ws, "创建完成√");
+  response.wsMsgWindow(data.ws, "创建完成√")
+  return response.wsResponse(data, true);
 });
 
 WebSocketObserver().listener("server/create_dir", (data) => {
@@ -62,12 +63,12 @@ WebSocketObserver().listener("server/rebuilder", (data) => {
   const server = serverModel.ServerManager().getServer(oldServerName);
   if (server.isRun()) {
     response.wsMsgWindow(data.ws, "实例正在运行，参数无法修改，请先关闭实例");
-    return;
+    return response.wsResponse(data, false);
   }
   if (oldServerName != newServerName) {
     // 暂时性禁止服务器标识名修改，重构版本后将会优化此功能
     response.wsMsgWindow(data.ws, "服务器标识名不可再更改");
-    return;
+    return response.wsResponse(data, false);
     // serverModel.ServerManager().reServerName(oldServerName, newServerName);
     // serverModel.builder(newServerName, ServerConfig);
     //serverModel.loadALLMinecraftServer();
@@ -76,6 +77,7 @@ WebSocketObserver().listener("server/rebuilder", (data) => {
   }
   response.wsResponse(data, true);
   response.wsMsgWindow(data.ws, "修改完成√");
+  return response.wsResponse(data, true);
 });
 
 WebSocketObserver().listener("server/delete", (data) => {
@@ -118,7 +120,9 @@ WebSocketObserver().listener("server/opt_all", (data) => {
       }
     }
     response.wsMsgWindow(data.ws, "操作执行发出！需要一定时间,具体结果请看服务端运行状态.");
+    return response.wsResponse(data, true);
   } catch (err) {
     response.wsMsgWindow(data.ws, "执行失败:" + err);
+    return response.wsResponse(data, false);
   }
 });
