@@ -11,7 +11,12 @@ WebSocketObserver().listener("server/properties", (data) => {
     .propertiesRead(configName, (err, properties) => {
       if (err) {
         response.wsMsgWindow(data.ws, `${configName} 文件不存在或读取出错！请自行检查或确认是否存在以及格式正确.`);
-        return response.wsResponse(data, null);
+        return response.wsResponse(data, {
+          run: serverModel.ServerManager().getServer(serverName).isRun(),
+          serverName,
+          configName,
+          properties: []
+        });
       }
       response.wsResponse(data, {
         run: serverModel.ServerManager().getServer(serverName).isRun(),
