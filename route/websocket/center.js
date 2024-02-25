@@ -3,6 +3,8 @@ const counter = require("../../core/counter");
 const tools = require("../../core/tools");
 const response = require("../../helper/Response");
 const serverModel = require("../../model/ServerModel");
+const { hash } = require("../../core/CryptoMine");
+const fs = require("fs");
 const os = require("os");
 const mversion = require("../../helper/version");
 
@@ -62,7 +64,7 @@ setInterval(function () {
     //banip: banipc, //封的ip
     banip: -1,
     //passwordError: counter.get("passwordError"), //密码错误次数
-    passwordError:-1,
+    passwordError: -1,
     userCounter: -1,
     userOnlineCounter: -1,
     csrfCounter: counter.get("csrfCounter"), //可能存在的CSRF攻击次数
@@ -71,7 +73,7 @@ setInterval(function () {
     verisonA: mversion.verisonA,
     verisonB: mversion.verisonB,
     system: mversion.system,
-    isPanel:false
+    isPanel: false
   };
 
   let useMemBai = ((os.freemem() / os.totalmem()) * 100).toFixed(0);
@@ -83,16 +85,38 @@ setInterval(function () {
 }, MCSERVER.localProperty.data_center_times);
 
 //重启逻辑
-WebSocketObserver().listener("center/restart", (data) => {
+WebSocketObserver().listener("center/restart", data => {
   MCSERVER.log("Worker重启...");
   response.wsResponse(data, true);
-  process.nextTick(()=>{
-    process.send({restart:"./app.js"});
+  process.nextTick(() => {
+    process.send({ restart: "./app.js" });
+    process.emit("SIGINT");
+  });
+});
+
+//更新逻辑
+WebSocketObserver().listener("center/update", async data => {
+  let { sign: remoteSign, buffer } = data.body;
+  let now = Math.floor(Date.now() / 1000);
+  let timeWindow = Math.floor(now / 120);
+  let timeKey = hash.hmac(MCSERVER.localProperty.MasterKey, timeWindow.toString());
+  let sign = hash.hmac(timeKey, buffer);
+  if (sign !== remoteSign) response.wsResponse(data, false);
+
+  const target_path = "./app.apkg";
+  fs.writeFileSync("./app.backup.apkg", fs.readFileSync(target_path))
+  fs.writeFileSync(target_path, buffer);
+  MCSERVER.log("[ 软件更新 ] Backend执行软件更新");
+
+  MCSERVER.log("Worker重启...");
+  response.wsResponse(data, true);
+  process.nextTick(() => {
+    process.send({ restart: "./app.js" });
     process.emit("SIGINT");
   });
 });
 
 //数据中心
-WebSocketObserver().listener("center/show", (data) => {
+WebSocketObserver().listener("center/show", data => {
   response.wsResponse(data, cacheSystemInfo);
 });

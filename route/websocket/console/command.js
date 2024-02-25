@@ -6,7 +6,7 @@ const permssion = require("../../../helper/Permission");
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //发送指令
-WebSocketObserver().listener("server/console/command", (data) => {
+WebSocketObserver().listener("server/console/command", data => {
   let par = data.body;
   let serverName = par.serverName.trim();
   let command = par.command;
@@ -40,7 +40,7 @@ WebSocketObserver().listener("server/console/command", (data) => {
 
 //服务端退出之后第一事件
 //当服务端开启自动崩溃重启后，手动关闭服务端时将忽略临时重启规则
-serverModel.ServerManager().on("exit_next", (data) => {
+serverModel.ServerManager().on("exit_next", data => {
   let server = serverModel.ServerManager().getServer(data.serverName);
   if (server._onceStopRestart) {
     server.dataModel.autoRestart = true;
@@ -49,5 +49,4 @@ serverModel.ServerManager().on("exit_next", (data) => {
 
   // 关闭 mcping 定时器
   mcPingProtocol.DestroyMCPingTask(data.serverName);
-  return response.wsResponse(data, true);
 });

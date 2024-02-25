@@ -1,7 +1,7 @@
 const { WebSocketObserver } = require("../../model/WebSocketModel");
 const response = require("../../helper/Response");
 
-WebSocketObserver().listener("menu", (data) => {
+WebSocketObserver().listener("menu", data => {
   //Object {ws: WebSocket, req: IncomingMessage, user: undefined, header: Object, body: "[body 开始]
   //Object {RequestKey: "req", RequestValue: "some"}
 

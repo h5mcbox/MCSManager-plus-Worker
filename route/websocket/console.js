@@ -16,7 +16,7 @@ function selectWebsocket(serverName, callback) {
 }
 
 //服务器异常
-serverModel.ServerManager().on("error", (data) => {
+serverModel.ServerManager().on("error", data => {
   MCSERVER.infoLog("Error".red, "[" + data.serverName + "] >>> 异常", true);
   selectWebsocket(data.serverName, (socket) => {
     response.wsMsgWindow(socket.ws, "服务器异常:" + data.msg);
@@ -24,7 +24,7 @@ serverModel.ServerManager().on("error", (data) => {
 });
 
 //服务器退出
-serverModel.ServerManager().on("exit", (data) => {
+serverModel.ServerManager().on("exit", data => {
   MCSERVER.log("[" + data.serverName + "] >>> 进程退出");
   let server = serverModel.ServerManager().getServer(data.serverName);
   if (server.dataModel.autoRestart) {
@@ -47,7 +47,7 @@ serverModel.ServerManager().on("exit", (data) => {
 });
 
 //服务器开启
-serverModel.ServerManager().on("open", (data) => {
+serverModel.ServerManager().on("open", data => {
   MCSERVER.log("[" + data.serverName + "] >>> 进程创建");
   // 传递开启服务端事件
   serverModel.ServerManager().emit("open_next", {
@@ -66,7 +66,7 @@ serverModel.ServerManager().on("open", (data) => {
 });
 
 //控制请求监听控制台实例
-WebSocketObserver().listener("server/console/ws", (data) => {
+WebSocketObserver().listener("server/console/ws", data => {
   let serverName = data.body.trim();
 
   MCSERVER.log("[" + serverName + "] >>> 准许控制台监听");
@@ -77,11 +77,11 @@ WebSocketObserver().listener("server/console/ws", (data) => {
   // 重置用户历史指针
   const instanceLogHistory = serverModel.ServerManager().getServer(serverName).logHistory;
   if (instanceLogHistory) instanceLogHistory.setPoint("", 0);
-  return response.wsResponse(data,null,"");
+  return response.wsResponse(data,null);
 });
 
 //前端退出控制台界面
-WebSocketObserver().listener("server/console/remove", (data) => {
+WebSocketObserver().listener("server/console/remove", data => {
   //单页退出时触发
   var serverName = data.body.trim();
   for (let client of Object.values(MCSERVER.allSockets)) {
@@ -108,22 +108,12 @@ setInterval(() => {
         continue;
       }
       const logHistory = server.logHistory;
-      if (logHistory) logHistory.writeLine(data);
+      if (logHistory) logHistory.writeLinedata;
       // 发送前端的标准，前端只识别 \r\n ，不可是\n
       data = data.replace(/\n/gim, "\r\n");
       data = data.replace(/\r\r\n/gim, "\r\n");
       //刷新每个服务器的缓冲数据
       totalBuffers[serverName] = data;
-      /*
-      selectWebsocket(serverName, (socket) => {
-        socket.send({
-          ws: socket.ws,
-          resK: "server/console/ws",
-          resV: {},
-          body: data
-        });
-      });
-      */
       // 释放内存并删除键
       consoleBuffer[serverName] = undefined;
       delete consoleBuffer[serverName];
@@ -135,12 +125,12 @@ setInterval(() => {
   }
   if (Object.keys(totalBuffers).length > 0) {
     for (let client of Object.values(MCSERVER.allSockets)) {
-      response.wsSend(client.ws, "server/console/ws", {}, totalBuffers);
+      response.wsSend(client.ws, "server/console/ws", totalBuffers);
     }
   }
 }, MCSERVER.localProperty.console_send_times);
 //控制台标准输出流
-serverModel.ServerManager().on("console", (data) => {
+serverModel.ServerManager().on("console", data => {
   // 加入到缓冲区
   if (!consoleBuffer[data.serverName]) consoleBuffer[data.serverName] = "";
   consoleBuffer[data.serverName] += data.msg;

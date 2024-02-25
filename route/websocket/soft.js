@@ -2,14 +2,14 @@ const { WebSocketObserver } = require("../../model/WebSocketModel");
 const response = require("../../helper/Response");
 
 //获取信息
-WebSocketObserver().listener("soft/view", (data) => {
+WebSocketObserver().listener("soft/view", data => {
   response.wsResponse(data, {
     softConfig: MCSERVER.softConfig
   });
 });
 
 //更新配置
-WebSocketObserver().listener("soft/update", (data) => {
+WebSocketObserver().listener("soft/update", data => {
   let newConfig = data.body;
   if (newConfig) {
     for (let k in MCSERVER.softConfig) {

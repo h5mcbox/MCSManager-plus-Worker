@@ -3,14 +3,14 @@ const serverModel = require("../../model/ServerModel");
 const response = require("../../helper/Response");
 const mcPingProtocol = require("../../helper/MCPingProtocol");
 
-WebSocketObserver().listener("server/view", (data) => {
+WebSocketObserver().listener("server/view", data => {
   let value = serverModel.ServerManager().getServerList();
   response.wsResponse(data, {
     items: value
   });
 });
 
-WebSocketObserver().listener("server/get", (data) => {
+WebSocketObserver().listener("server/get", data => {
   //服务器名在 data.body 里面
   let serverName = data.body.trim();
   let mcserver = serverModel.ServerManager().getServer(serverName);
@@ -26,7 +26,7 @@ WebSocketObserver().listener("server/get", (data) => {
   response.wsResponse(data, serverData);
 });
 
-WebSocketObserver().listener("server/create", (data) => {
+WebSocketObserver().listener("server/create", data => {
 
   let ServerConfig = data.body;
   let serverName = ServerConfig.serverName.trim();
@@ -44,7 +44,7 @@ WebSocketObserver().listener("server/create", (data) => {
   return response.wsResponse(data, true);
 });
 
-WebSocketObserver().listener("server/create_dir", (data) => {
+WebSocketObserver().listener("server/create_dir", data => {
 
   let ServerConfig = data.body;
   try {
@@ -55,7 +55,7 @@ WebSocketObserver().listener("server/create_dir", (data) => {
   }
 });
 
-WebSocketObserver().listener("server/rebuilder", (data) => {
+WebSocketObserver().listener("server/rebuilder", data => {
 
   let ServerConfig = data.body;
   let oldServerName = ServerConfig.oldServerName.trim();
@@ -80,7 +80,7 @@ WebSocketObserver().listener("server/rebuilder", (data) => {
   return response.wsResponse(data, true);
 });
 
-WebSocketObserver().listener("server/delete", (data) => {
+WebSocketObserver().listener("server/delete", data => {
 
   let serverName = data.body.trim();
   try {
@@ -95,7 +95,7 @@ WebSocketObserver().listener("server/delete", (data) => {
 });
 
 //服务器批量启动与关闭
-WebSocketObserver().listener("server/opt_all", (data) => {
+WebSocketObserver().listener("server/opt_all", data => {
   let command = data.body.trim();
 
   try {

@@ -14,15 +14,14 @@ function send(res, info, value) {
   // res.end();
 }
 
-function wsSend(ws, info, value, body = "", RequestID) {
+function wsSend(ws, info, ResponseValue, RequestID) {
   let header = {
     ResponseKey: info,
-    ResponseValue: value,
     RequestID
   };
   try {
     if (ws.readyState == ws.OPEN) {
-      ws.send(msgpack.encode([header, body ?? ""]));
+      ws.send(msgpack.encode([header, ResponseValue]));
     }
   } catch (e) {
     MCSERVER.log("一个Websocket数据包发送失败:");
@@ -38,14 +37,14 @@ module.exports.returnInfo = (res, value) => {
   send(res, "info/show", value);
 };
 
-module.exports.wsSend = (ws, info, value, body = "") => {
-  wsSend(ws, info, value, body);
+module.exports.wsSend = (ws, info, value) => {
+  wsSend(ws, info, value, null);
 };
 
-module.exports.wsResponse = ({ ws, RequestID, RequestValue: info }, value, body = "") => {
-  wsSend(ws, info, value, body, RequestID);
+module.exports.wsResponse = ({ ws, RequestID, RequestValue }, value) => {
+  wsSend(ws, RequestValue, value, RequestID);
 }
 
 module.exports.wsMsgWindow = (ws, msg = "") => {
-  wsSend(ws, "window/msg", {}, msg);
+  wsSend(ws, "window/msg", msg, null);
 };

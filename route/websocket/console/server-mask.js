@@ -4,7 +4,7 @@ const permssion = require("../../../helper/Permission");
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
 
 //自动重启设定
-WebSocketObserver().listener("server/console/autorestart", (data) => {
+WebSocketObserver().listener("server/console/autorestart", data => {
   let serverName = data.body.trim();
   let server = serverModel.ServerManager().getServer(serverName);
   server.dataModel.autoRestart = !server.dataModel.autoRestart; //反之亦然

@@ -9,7 +9,7 @@ const childProcess = require("child_process");
 MCSERVER.PAGE.DockerRes = [];
 
 //Docker 容器创建路由
-WebSocketObserver().listener("docker/new", (data) => {
+WebSocketObserver().listener("docker/new", data => {
   let dockerConfig = data.body;
   //{dockerImageName: "",
   //dockerfile: "FROM java:latest↵RUN mkdir -p /mcsd↵RUN echo "Asia…teractive tzdata↵WORKDIR / mcsd↵RUN apt - get update"}
@@ -58,8 +58,8 @@ WebSocketObserver().listener("docker/new", (data) => {
       pushRes("构建出错");
     });
     return response.wsResponse(data, true);
-    // process.stdout.on('data', (data) => console.log(iconv.decode(data, 'utf-8')));
-    // process.stderr.on('data', (data) => console.log(iconv.decode(data, 'utf-8')));
+    // process.stdout.on('data', data => console.log(iconv.decode(data, 'utf-8')));
+    // process.stderr.on('data', data => console.log(iconv.decode(data, 'utf-8')));
   } catch (err) {
     MCSERVER.warning("创建出错：", err);
     pushRes("构建错误");
@@ -69,12 +69,12 @@ WebSocketObserver().listener("docker/new", (data) => {
 
 //结果列表获取
 //路由
-WebSocketObserver().listener("docker/res", (data) => {
+WebSocketObserver().listener("docker/res", data => {
   response.wsResponse(data, MCSERVER.PAGE.DockerRes);
 });
 
 //获取配置
-WebSocketObserver().listener("docker/config", (data) => {
+WebSocketObserver().listener("docker/config", data => {
   let serverName = data.body || "";
   if (serverName) {
     let mcserver = serverModel.ServerManager().getServer(serverName);
@@ -85,7 +85,7 @@ WebSocketObserver().listener("docker/config", (data) => {
 });
 
 //设置配置
-WebSocketObserver().listener("docker/setconfig", (data) => {
+WebSocketObserver().listener("docker/setconfig", data => {
   // {
   //     serverName: "xxxx",
   //     dockerConfig: { ... }

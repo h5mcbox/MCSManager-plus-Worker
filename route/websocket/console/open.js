@@ -1,11 +1,10 @@
 const response = require("../../../helper/Response");
 var serverModel = require("../../../model/ServerModel");
-const permssion = require("../../../helper/Permission");
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //开启服务器
-WebSocketObserver().listener("server/console/open", (data) => {
+WebSocketObserver().listener("server/console/open", data => {
   let serverName = data.body.trim();
   MCSERVER.log("Backend 正在启动 ", serverName, " 服务端实例...");
   try {
@@ -22,11 +21,11 @@ WebSocketObserver().listener("server/console/open", (data) => {
   } catch (err) {
     response.wsMsgWindow(data.ws, "" + err);
   }
-  return response.wsResponse(data, "server/console/open", null);
+  return response.wsResponse(data, "server/console/open");
 });
 
 // 服务端开启后的第一事件
-serverModel.ServerManager().on("open_next", (data) => {
+serverModel.ServerManager().on("open_next", data => {
   const server = serverModel.ServerManager().getServer(data.serverName);
   const host = server.dataModel.mcpingConfig.mcpingHost || "localhost";
   if (server) {
@@ -36,7 +35,7 @@ serverModel.ServerManager().on("open_next", (data) => {
       return;
     }
     // 首先从配置文件读取，若成功读取则使用配置文件，否则使用原值
-    server.propertiesRead((obj, err) => {
+    server.propertiesRead("server.properties", (obj, err) => {
       if (err) {
         // 配置文件不存在，默认 25565，因为配置文件不存在必定先初始化
         mcPingProtocol.CreateMCPingTask(data.serverName, host, 25565);
@@ -45,6 +44,5 @@ serverModel.ServerManager().on("open_next", (data) => {
         mcPingProtocol.CreateMCPingTask(data.serverName, host, parseInt(obj["server-port"]));
       }
     });
-    return response.wsResponse(data, true);
   }
 });

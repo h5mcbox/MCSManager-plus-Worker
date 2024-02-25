@@ -7,7 +7,7 @@ const os = require("os");
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //控制台信息获取
-WebSocketObserver().listener("server/console", (data) => {
+WebSocketObserver().listener("server/console", data => {
   // permssion.needLogin(req, res);
   let serverName = data.body.trim();
   let serverData = serverModel.ServerManager().getServer(serverName);

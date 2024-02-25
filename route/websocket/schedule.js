@@ -25,7 +25,7 @@ function getMineScheduleList(servername) {
 }
 
 //列出计划任务
-WebSocketObserver().listener("schedule/list", (data) => {
+WebSocketObserver().listener("schedule/list", data => {
   let servername = data.body;
   // let list = MCSERVER.Schedule.dataModel.list;
   let sendlist = getMineScheduleList(servername);
@@ -37,7 +37,7 @@ WebSocketObserver().listener("schedule/list", (data) => {
 });
 
 //创建计划任务
-WebSocketObserver().listener("schedule/create", (data) => {
+WebSocketObserver().listener("schedule/create", data => {
   let obj = data.body || {};
 
   try {
@@ -56,7 +56,7 @@ WebSocketObserver().listener("schedule/create", (data) => {
 });
 
 //删除计划任务
-WebSocketObserver().listener("schedule/delete", (data) => {
+WebSocketObserver().listener("schedule/delete", data => {
   let obj = data.body || {};
   try {
     schedulejob.deleteScheduleJob(obj.id || "");

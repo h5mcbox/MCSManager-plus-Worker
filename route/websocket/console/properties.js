@@ -3,7 +3,7 @@ var serverModel = require("../../../model/ServerModel");
 const { WebSocketObserver } = require("../../../model/WebSocketModel");
 
 //获取配置
-WebSocketObserver().listener("server/properties", (data) => {
+WebSocketObserver().listener("server/properties", data => {
   let [serverName, configName = "server.properties"] = data.body;
   serverModel
     .ServerManager()
@@ -27,7 +27,7 @@ WebSocketObserver().listener("server/properties", (data) => {
     });
 });
 //获取配置列表
-WebSocketObserver().listener("server/propertiesList", (data) => {
+WebSocketObserver().listener("server/propertiesList", data => {
   let serverName = data.body.trim();
   let list = serverModel
     .ServerManager()
@@ -37,7 +37,7 @@ WebSocketObserver().listener("server/propertiesList", (data) => {
 });
 
 //更新配置
-WebSocketObserver().listener("server/properties_update", (data) => {
+WebSocketObserver().listener("server/properties_update", data => {
   let config = data.body;
   let properties = config.properties;
   try {
@@ -57,7 +57,7 @@ WebSocketObserver().listener("server/properties_update", (data) => {
 });
 
 //从文件重新读取
-WebSocketObserver().listener("server/properties_update_reload", (data) => {
+WebSocketObserver().listener("server/properties_update_reload", data => {
   let [serverName, filename = "server.properties"] = data.body;
   try {
     serverModel
