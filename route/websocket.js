@@ -1,4 +1,4 @@
-const {Router} = require("express");
+const { Router } = require("express");
 
 const TokenManager = require("../helper/TokenManager");
 const { WebSocketObserver } = require("../model/WebSocketModel");
@@ -87,7 +87,7 @@ router.ws("/ws", function (ws, req) {
     token: token,
     console: null
   });
-  
+
   //状态标识
   status = true;
 
@@ -102,8 +102,8 @@ router.ws("/ws", function (ws, req) {
   ws.on("message", function (data) {
     try {
       //解码Message Pack数据包
-      const [header,body]=msgpack.decode(data);
-      const {RequestID}=header;
+      const [header, RequestValue] = msgpack.decode(data);
+      const { RequestID } = header;
 
       //Websocket 心跳包 | 前端 10 秒递增链接健康指数
       //当网络延迟特别高时，也能很好的降低指数. 将来指数够低时，将自动优化数据的发送
@@ -119,8 +119,7 @@ router.ws("/ws", function (ws, req) {
         req: req,
         header,
         RequestID,
-        body,
-        RequestValue: header["RequestValue"],
+        body: RequestValue,
         token: token,
         WsSession: WsSession
       });
@@ -143,7 +142,7 @@ router.ws("/ws", function (ws, req) {
     }
     wsAliveHBCount--;
   }, 1000 * 10);
-  
+
 
   //Websocket 关闭函数
   function WebSocketClose() {
