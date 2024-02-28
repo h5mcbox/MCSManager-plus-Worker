@@ -1,13 +1,14 @@
-const { wsResponseError } = require("../helper/Response");
-const Observer = require("./Observer");
+const { wsResponseError, wsResponse } = require("../helper/Response");
+const RPCHandler = require("./RPCHandler");
 
-const WebSocketModel = new Observer;
+const WebSocketModel = new RPCHandler;
 
 //事件二次转发  监听ws/req即可监听所有Websocket请求
-WebSocketModel.listener("ws/req", "", data => {
+WebSocketModel.define("ws/req", "", async data => {
   try {
-    let result=WebSocketModel.emit(data.header.RequestKey, data);
-    if(!result)throw "Method not found";
+    let [success, result] = await WebSocketModel.emit(data.header.RequestKey, data);
+    wsResponse(data, result);
+    if (!success) throw "Method not found";
   } catch (err) {
     wsResponseError(data, err);
     throw err;

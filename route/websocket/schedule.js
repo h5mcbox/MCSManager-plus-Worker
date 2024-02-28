@@ -25,44 +25,44 @@ function getMineScheduleList(servername) {
 }
 
 //列出计划任务
-WebSocketObserver().listener("schedule/list", data => {
+WebSocketObserver().define("schedule/list", data => {
   let servername = data.body;
   // let list = MCSERVER.Schedule.dataModel.list;
   let sendlist = getMineScheduleList(servername);
 
-  response.wsResponse(data, {
+  return {
     servername: servername,
     schedules: sendlist
-  });
+  };
 });
 
 //创建计划任务
-WebSocketObserver().listener("schedule/create", data => {
+WebSocketObserver().define("schedule/create", data => {
   let obj = data.body || {};
 
   try {
     const list = getMineScheduleList(obj.servername);
     if (list.length > MAX_MASK) {
       response.wsMsgWindow(data.ws, "到达创建数量上限！");
-      return response.wsResponse(data, false);
+      return false;
     }
     CreateScheduleJob(obj);
     response.wsMsgWindow(data.ws, "创建计划任务成功 √");
-    return response.wsResponse(data, true);
+    return true;
   } catch (err) {
     response.wsMsgWindow(data.ws, "错误！创建失败:" + err);
-    return response.wsResponse(data, false);
+    return false;
   }
 });
 
 //删除计划任务
-WebSocketObserver().listener("schedule/delete", data => {
+WebSocketObserver().define("schedule/delete", data => {
   let obj = data.body || {};
   try {
     schedulejob.deleteScheduleJob(obj.id || "");
     response.wsMsgWindow(data.ws, "删除序号:" + obj.id + "计划任务");
   } catch (err) {
     response.wsMsgWindow(data.ws, "删除失败！" + err);
-    return response.wsResponse(data, false);
+    return false;
   }
 });

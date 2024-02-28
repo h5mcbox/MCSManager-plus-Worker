@@ -66,7 +66,7 @@ serverModel.ServerManager().on("open", data => {
 });
 
 //控制请求监听控制台实例
-WebSocketObserver().listener("server/console/ws", data => {
+WebSocketObserver().define("server/console/ws", data => {
   let serverName = data.body.trim();
 
   MCSERVER.log("[" + serverName + "] >>> 准许控制台监听");
@@ -77,20 +77,20 @@ WebSocketObserver().listener("server/console/ws", data => {
   // 重置用户历史指针
   const instanceLogHistory = serverModel.ServerManager().getServer(serverName).logHistory;
   if (instanceLogHistory) instanceLogHistory.setPoint("", 0);
-  return response.wsResponse(data,null);
+  return null;
 });
 
 //前端退出控制台界面
-WebSocketObserver().listener("server/console/remove", data => {
+WebSocketObserver().define("server/console/remove", data => {
   //单页退出时触发
   var serverName = data.body.trim();
   for (let client of Object.values(MCSERVER.allSockets)) {
     if (client.console === serverName) {
       client.console = undefined;
-      return response.wsResponse(data,true);
+      return true;
     }
   }
-  return response.wsResponse(data,false);
+  return false;
 });
 
 // 缓冲区定时发送频率，默认限制两秒刷新缓冲区

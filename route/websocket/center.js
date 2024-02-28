@@ -85,23 +85,22 @@ setInterval(function () {
 }, MCSERVER.localProperty.data_center_times);
 
 //重启逻辑
-WebSocketObserver().listener("center/restart", data => {
+WebSocketObserver().define("center/restart", data => {
   MCSERVER.log("Worker重启...");
-  response.wsResponse(data, true);
-  process.nextTick(() => {
+  return process.nextTick(() => {
     process.send({ restart: "./app.js" });
     process.emit("SIGINT");
   });
 });
 
 //更新逻辑
-WebSocketObserver().listener("center/update", async data => {
+WebSocketObserver().define("center/update", async data => {
   let { sign: remoteSign, buffer } = data.body;
   let now = Math.floor(Date.now() / 1000);
   let timeWindow = Math.floor(now / 120);
   let timeKey = hash.hmac(MCSERVER.localProperty.MasterKey, timeWindow.toString());
   let sign = hash.hmac(timeKey, buffer);
-  if (sign !== remoteSign) response.wsResponse(data, false);
+  if (sign !== remoteSign) return false;
 
   const target_path = "./app.apkg";
   fs.writeFileSync("./app.backup.apkg", fs.readFileSync(target_path))
@@ -109,14 +108,11 @@ WebSocketObserver().listener("center/update", async data => {
   MCSERVER.log("[ 软件更新 ] Backend执行软件更新");
 
   MCSERVER.log("Worker重启...");
-  response.wsResponse(data, true);
-  process.nextTick(() => {
+  return process.nextTick(() => {
     process.send({ restart: "./app.js" });
     process.emit("SIGINT");
   });
 });
 
 //数据中心
-WebSocketObserver().listener("center/show", data => {
-  response.wsResponse(data, cacheSystemInfo);
-});
+WebSocketObserver().define("center/show", data => cacheSystemInfo);

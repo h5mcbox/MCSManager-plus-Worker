@@ -7,13 +7,13 @@ const os = require("os");
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //控制台信息获取
-WebSocketObserver().listener("server/console", data => {
+WebSocketObserver().define("server/console", data => {
   // permssion.needLogin(req, res);
   let serverName = data.body.trim();
   let serverData = serverModel.ServerManager().getServer(serverName);
   let sysMonery = ((os.freemem() / 1024 / (os.totalmem() / 1024)) * 100).toFixed(2);
   // let cpu = MCSERVER.dataCenter.cacheCPU;
-  response.wsResponse(data, {
+  return {
     serverData: serverData.dataModel,
     run: serverData.isRun(),
     sysMonery: sysMonery,
@@ -24,5 +24,5 @@ WebSocketObserver().listener("server/console", data => {
       current_players: "--",
       max_players: "--"
     }
-  });
+  };
 });

@@ -9,7 +9,7 @@ const childProcess = require("child_process");
 MCSERVER.PAGE.DockerRes = [];
 
 //Docker 容器创建路由
-WebSocketObserver().listener("docker/new", data => {
+WebSocketObserver().define("docker/new", data => {
   let dockerConfig = data.body;
   //{dockerImageName: "",
   //dockerfile: "FROM java:latest↵RUN mkdir -p /mcsd↵RUN echo "Asia…teractive tzdata↵WORKDIR / mcsd↵RUN apt - get update"}
@@ -57,35 +57,33 @@ WebSocketObserver().listener("docker/new", data => {
     process.on("error", () => {
       pushRes("构建出错");
     });
-    return response.wsResponse(data, true);
+    return true;
     // process.stdout.on('data', data => console.log(iconv.decode(data, 'utf-8')));
     // process.stderr.on('data', data => console.log(iconv.decode(data, 'utf-8')));
   } catch (err) {
     MCSERVER.warning("创建出错：", err);
     pushRes("构建错误");
-    return response.wsResponse(data, false);
+    return false;
   }
 });
 
 //结果列表获取
 //路由
-WebSocketObserver().listener("docker/res", data => {
-  response.wsResponse(data, MCSERVER.PAGE.DockerRes);
-});
+WebSocketObserver().define("docker/res", data => MCSERVER.PAGE.DockerRes);
 
 //获取配置
-WebSocketObserver().listener("docker/config", data => {
+WebSocketObserver().define("docker/config", data => {
   let serverName = data.body || "";
   if (serverName) {
     let mcserver = serverModel.ServerManager().getServer(serverName);
-    response.wsResponse(data, mcserver.dataModel.dockerConfig);
     mcserver.dataModel.save();
+    return mcserver.dataModel.dockerConfig;
   }
-  return response.wsResponse(data, false);
+  return false;
 });
 
 //设置配置
-WebSocketObserver().listener("docker/setconfig", data => {
+WebSocketObserver().define("docker/setconfig", data => {
   // {
   //     serverName: "xxxx",
   //     dockerConfig: { ... }
@@ -97,6 +95,6 @@ WebSocketObserver().listener("docker/setconfig", data => {
     mcserver.dataModel.dockerConfig = jsonObj.dockerConfig;
     mcserver.dataModel.save();
     response.wsMsgWindow(data.ws, "操作成功，数据已保存");
-    return response.wsResponse(data, true);
+    return true;
   }
 });

@@ -6,36 +6,36 @@ const permssion = require("../../../helper/Permission");
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //发送指令
-WebSocketObserver().listener("server/console/command", data => {
+WebSocketObserver().define("server/console/command", data => {
   let par = data.body;
   let serverName = par.serverName.trim();
   let command = par.command;
-    //代表重启服务器
-    if (command == "__restart__") {
-      serverModel.ServerManager().getServer(serverName).restart();
-      response.wsMsgWindow(data.ws, "服务器正在重启..");
-      return response.wsResponse(data, false);
+  //代表重启服务器
+  if (command == "__restart__") {
+    serverModel.ServerManager().getServer(serverName).restart();
+    response.wsMsgWindow(data.ws, "服务器正在重启..");
+    return false;
+  }
+  //强制结束服务端进程
+  if (command == "__killserver__") {
+    serverModel.ServerManager().getServer(serverName).kill();
+    response.wsMsgWindow(data.ws, "服务器结束进程");
+    return false;
+  }
+  //通过命令方法停止服务端
+  if (command == "__stop__") {
+    let server = serverModel.ServerManager().getServer(serverName);
+    let isRestart = server.dataModel.autoRestart;
+    if (isRestart) {
+      server.dataModel.autoRestart = false;
+      server._onceStopRestart = true;
     }
-    //强制结束服务端进程
-    if (command == "__killserver__") {
-      serverModel.ServerManager().getServer(serverName).kill();
-      response.wsMsgWindow(data.ws, "服务器结束进程");
-      return response.wsResponse(data, false);
-    }
-    //通过命令方法停止服务端
-    if (command == "__stop__") {
-      let server = serverModel.ServerManager().getServer(serverName);
-      let isRestart = server.dataModel.autoRestart;
-      if (isRestart) {
-        server.dataModel.autoRestart = false;
-        server._onceStopRestart = true;
-      }
-      server.stopServer();
-      return response.wsResponse(data, false);
-    }
-    //不是特殊命令，则直接执行
-    serverModel.sendCommand(serverName, command);
-    return response.wsResponse(data, false);
+    server.stopServer();
+    return false;
+  }
+  //不是特殊命令，则直接执行
+  serverModel.sendCommand(serverName, command);
+  return false;
 });
 
 //服务端退出之后第一事件

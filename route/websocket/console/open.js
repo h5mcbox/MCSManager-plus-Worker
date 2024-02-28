@@ -4,7 +4,7 @@ const { WebSocketObserver } = require("../../../model/WebSocketModel");
 const mcPingProtocol = require("../../../helper/MCPingProtocol");
 
 //开启服务器
-WebSocketObserver().listener("server/console/open", data => {
+WebSocketObserver().define("server/console/open", data => {
   let serverName = data.body.trim();
   MCSERVER.log("Backend 正在启动 ", serverName, " 服务端实例...");
   try {
@@ -13,15 +13,15 @@ WebSocketObserver().listener("server/console/open", data => {
       response.wsMsgWindow(data.ws, "服务器无法启动,建议检查配置或权限");
       return;
     }
-    response.wsResponse(data, true);
     // 传递开启服务端事件
     serverModel.ServerManager().emit("open_next", {
       serverName: serverName
     });
+    return true;
   } catch (err) {
     response.wsMsgWindow(data.ws, "" + err);
   }
-  return response.wsResponse(data, "server/console/open");
+  return null;
 });
 
 // 服务端开启后的第一事件
