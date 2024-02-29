@@ -7,8 +7,8 @@ const WebSocketModel = new RPCHandler;
 WebSocketModel.define("ws/req", "", async data => {
   try {
     let [success, result] = await WebSocketModel.emit(data.header.RequestKey, data);
-    wsResponse(data, result);
-    if (!success) throw "Method not found";
+    if (success) wsResponse(data, result);
+    else wsResponseError(data, "Method not found");
   } catch (err) {
     wsResponseError(data, err);
     throw err;
