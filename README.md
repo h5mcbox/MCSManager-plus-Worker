@@ -113,7 +113,6 @@ node app
 | **public/common/URL.js**         |URL定位器|
 | **server/server_core**           |Minecraft 服务端核心目录，包括服务端文件，配置，Mod，以及插件|
 | **server/x.json**               |Minecraft 服务器面板配置文件|
-| **users/x.json**                |控制面板用户配置文件|
 | **route/**                      |控制器，HTTP 请求业务逻辑层（可二次扩展）|
 | **route/websocket/**            |控制器，Webscoket 请求业务逻辑层（可二次扩展）|
 | **core/Process/**                |Minecraft Server 类实现|

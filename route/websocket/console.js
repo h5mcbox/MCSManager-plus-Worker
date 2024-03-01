@@ -67,7 +67,7 @@ serverModel.ServerManager().on("open", data => {
 
 //控制请求监听控制台实例
 WebSocketObserver().define("server/console/ws", data => {
-  let serverName = data.body.trim();
+  let { serverName, userName } = data.body;
 
   MCSERVER.log("[" + serverName + "] >>> 准许控制台监听");
 
@@ -76,7 +76,7 @@ WebSocketObserver().define("server/console/ws", data => {
 
   // 重置用户历史指针
   const instanceLogHistory = serverModel.ServerManager().getServer(serverName).logHistory;
-  if (instanceLogHistory) instanceLogHistory.setPoint("", 0);
+  if (instanceLogHistory) instanceLogHistory.setPoint(userName, 0);
   return null;
 });
 

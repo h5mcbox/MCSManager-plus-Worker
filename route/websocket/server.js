@@ -120,7 +120,6 @@ WebSocketObserver().define("server/opt_all", data => {
         continue;
       }
     }
-    response.wsMsgWindow(data.ws, "操作执行发出！需要一定时间,具体结果请看服务端运行状态.");
     return true;
   } catch (err) {
     response.wsMsgWindow(data.ws, "执行失败:" + err);
