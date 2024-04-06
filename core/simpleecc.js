@@ -18,17 +18,7 @@
       2n ** 256n - 432420386565659656852420866394968145599n,
       256,
       32,
-      (function () {
-        if (typeof sha256 === "function") {
-          return globalThis.sha256;
-        } else if (typeof require === "function") {
-          return require("./CryptoMine").hash;
-        } else if (hashFunction.name === "sha256") {
-          return hashFunction;
-        } else {
-          throw "There has not sha256 function to use";
-        }
-      })()
+      require("./CryptoMine").hash
     ]
   }
   if (typeof basePoint === "string") {
