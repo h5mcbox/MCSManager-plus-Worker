@@ -5,7 +5,7 @@
     window.simpleECC = simpleECC;
   }
   return simpleECC;
-})(function simpleECC(basePoint, a, b, p, n, l, hl, hashFunction) {
+})(function simpleECC(basePoint, a, b, p, n, hl, hashFunction) {
   const curveSet = {
     "secp256k1": [
       {
@@ -16,7 +16,6 @@
       7n,
       2n ** 256n - 2n ** 32n - 2n ** 9n - 2n ** 8n - 2n ** 7n - 2n ** 6n - 2n ** 4n - 1n,
       2n ** 256n - 432420386565659656852420866394968145599n,
-      256,
       32,
       require("./CryptoMine").hash
     ]
@@ -67,7 +66,6 @@
   class cryptoKey {
     type;
     exportable;
-    revokeKey;
     exportKey(getPoint) {
       let entry = cryptoKeyMap.get(this);
       if (!entry.exportable) throw "You can't export this key.";
@@ -82,14 +80,13 @@
         return concatBufs([Uint8Array.from([5]), BigIntToBuffer(entry.key)]).buffer;
       }
     }
+    revokeKey() { cryptoKeyMap.delete(this); }
     constructor(type, exportable, key) {
       this.type = type;
       this.exportable = exportable;
       let KeyDescription = { type, key, exportable };
-      let KeyProxy = Proxy.revocable(KeyDescription, {});
-      this.revokeKey = KeyProxy.revoke;
       Object.freeze(this);
-      cryptoKeyMap.set(this, KeyProxy.proxy);
+      cryptoKeyMap.set(this, KeyDescription);
     }
   }
   //There passed curve check for performance
@@ -143,6 +140,8 @@
       this.x = x;
       this.y = y;
     }
+    /** @param {Point} pB */add(pB) { return pointAdd(this, pB); }
+    /** @param {BigInt} n */mul(n) { return pointMul(n, this); }
   }
 
   function pointAdd(p, q) {
@@ -183,9 +182,7 @@
    * @returns {jacobianPoint}
    */
   function jacobianDouble(pA) {
-    if (pA.y == 0) {
-      return new jacobianPoint(0n, 0n, 0n);
-    };
+    if (pA.y == 0) return new jacobianPoint(0n, 0n, 0n);
     let r = mod(3n * pA.x ** 2n + a * pA.z ** 4n, p);
     let y2 = mod(pA.y ** 2n, p);
     let t = mod(4n * pA.x * y2, p);
@@ -202,12 +199,8 @@
    * @returns {jacobianPoint}
    */
   function jacobianAdd(pA, pB) {
-    if (pA.y == 0n) {
-      return pB;
-    };
-    if (pB.y == 0n) {
-      return pA;
-    };
+    if (pA.y == 0n) return pB;
+    if (pB.y == 0n) return pA;
     let yBzA3 = mod(pB.y * (pA.z ** 3n), p);
     let yAzB3 = mod(pA.y * (pB.z ** 3n), p);
     let u = yBzA3 - yAzB3;
@@ -215,11 +208,8 @@
     let xBzA2 = mod(pB.x * (pA.z ** 2n), p);
     let v = xBzA2 - xAzB2;
     if (xAzB2 === xBzA2) {
-      if (yAzB3 === yBzA3) {
-        return jacobianDouble(pA);
-      } else {
-        return new jacobianPoint(0n, 0n, 1n);
-      }
+      if (yAzB3 === yBzA3) return jacobianDouble(pA);
+      else return new jacobianPoint(0n, 0n, 1n);
     }
     let v2 = mod(v * v, p);
     let v3 = mod(v2 * v, p);
@@ -230,39 +220,22 @@
     return new jacobianPoint(x, y, z);
   };
   function jacobianMultiply(pA, k) {
-    if (pA.y === 0n || k === 0n) {
-      return new jacobianPoint(0n, 0n, 1n);
-    };
-    if (k === 1n) {
-      return pA;
-    };
-    if (k < 0n || k >= n) {
-      return jacobianMultiply(pA, mod(k, n));
-    };
+    if (pA.y === 0n || k === 0n) return new jacobianPoint(0n, 0n, 1n);
+    if (k === 1n) return pA;
+    if (k < 0n || k >= n) return jacobianMultiply(pA, mod(k, n));
     let nextLevel = jacobianDouble(jacobianMultiply(pA, k / 2n));
-    if (mod(k, 2n) === 0n) {
-      return nextLevel;
-    };
-    if (mod(k, 2n) === 1n) {
-      return jacobianAdd(nextLevel, pA);
-    };
+    if (mod(k, 2n) === 0n) return nextLevel;
+    if (mod(k, 2n) === 1n) return jacobianAdd(nextLevel, pA);
     throw new Error(`unexcept number or point.`);
   };
-  function GenerateHEX(len) {
-    let result = [];
-    for (let i = 0; i < len; i++) {
-      let temp = Math.floor(Math.random() * 256).toString(16);
-      if (temp.length == 1) {
-        result[i] = "0" + temp;
-      } else {
-        result[i] = temp;
-      }
-    }
-    return result.join("");
-  }
   let BasePoint = new Point(basePoint.x, basePoint.y);
   function HEXtoNumber(HEX) {
     return BigInt("0x" + HEX);
+  }
+  function randomBuffer(l) {
+    const crypto = (typeof require !== "object") ? require("crypto").webcrypto : window.crypto;
+    let buffer = new Uint8Array(l);
+    return crypto.getRandomValues(buffer);
   }
   function BigIntToBuffer(n = 0n) {
     let l = Math.ceil(n.toString(16).length / 2);
@@ -275,18 +248,12 @@
   }
   function BufferToBigInt(b) {
     let r = 0n;
-    b.forEach((e, i) => {
-      r += BigInt(e);
-      if (i == b.length - 1) return true;
-      r *= 256n;
-    });
+    for (let num of b) r = r * 256n + BigInt(num);
     return r;
   }
   function concatBufs(bufs = []) {
     let totalLength = 0, result;
-    for (const e of bufs) {
-      totalLength += e.length;
-    }
+    for (const e of bufs) totalLength += e.length;
     result = new Uint8Array(totalLength);
     let position = 0;
     for (const e of bufs) {
@@ -296,7 +263,7 @@
     return result;
   }
   function generatePrivateKey(exportable = true) {
-    return new cryptoKey("private", exportable, HEXtoNumber(GenerateHEX(l)));
+    return new cryptoKey("private", exportable, BufferToBigInt(randomBuffer(hl)));
   }
   function getPublicKey(PrivateKey, exportable = true) {
     let entry = cryptoKeyMap.get(PrivateKey);
@@ -314,9 +281,9 @@
     if (!cryptoKeyMap.has(PrivateKey)) throw new Error("This cryptoKey cannot sign the data.");
     let entry = cryptoKeyMap.get(PrivateKey);
     let z = HEXtoNumber(hashFunction(data));
-    let k = HEXtoNumber(GenerateHEX(256));
+    let k = BufferToBigInt(randomBuffer(256));
     let k_inverse = get_inverse(k, n);
-    let kG = pointMul(k, BasePoint);
+    let kG = BasePoint.mul(k);
     let r = kG.x;
     let s = (k_inverse * (z + entry.key * r)) % n;
     let rB = addPad(hl, BigIntToBuffer(r)), sB = addPad(hl, BigIntToBuffer(s));
@@ -326,17 +293,17 @@
     if (!cryptoKeyMap.has(PublicKey)) throw new Error("This cryptoKey cannot verify the data.");
     let z = HEXtoNumber(hashFunction(data));
     let entry = cryptoKeyMap.get(PublicKey);
-    if (Buffer && sign instanceof Buffer) sign = new Uint8Array(sign);
-    else if (sign instanceof ArrayBuffer) sign = new Uint8Array(sign);
+    if (typeof Buffer !== "undefined" && sign instanceof Buffer) sign = new Uint8Array(sign);
     let rB = sign.slice(0, hl), sB = sign.slice(hl, 2 * hl);
     let rrB = removePad(rB), rsB = removePad(sB);
     let r = BufferToBigInt(rrB), s = BufferToBigInt(rsB);
     let s_inverse = get_inverse(s, n);
     let u1 = (s_inverse * z) % n;
     let u2 = (s_inverse * r) % n;
-    let p1 = pointMul(u1, BasePoint);
-    let p2 = pointMul(u2, entry.key);
-    let p3 = pointAdd(p1, p2);
+    let p1 = BasePoint.mul(u1);
+    /** @type {Point} */let PublicPoint = entry.key;
+    let p2 = PublicPoint.mul(u2);
+    let p3 = p1.add(p2);
     return p3.x === r;
   }
   return {
